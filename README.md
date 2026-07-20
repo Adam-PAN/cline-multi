@@ -6,6 +6,7 @@
 
 
 </p>
+
 ##  🎉 Cline Chinese被胜算云收购啦！（2026.07.20）
 Cline Chinese被胜算云收购啦！即日起，项目的后续代码维护、插件更新及日常运营工作，将全部交由胜算云团队负责。请您移步至新的项目地址，以获取最新版本与支持。<br>
 新项目地址：https://github.com/SSYCloud/cline-chinese<br>
