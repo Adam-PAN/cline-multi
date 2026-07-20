@@ -1,11 +1,15 @@
 # Cline-Chinese (Cline中文汉化版) 🌏
 
-> 🎉 截止到2026.7.14，Cline Chinese在VS Code插件市场的下载量突破266k啦！感谢大家的支持！
+> 🎉 截止到2026.7.20，Cline Chinese在VS Code插件市场的下载量突破268k啦！感谢大家的支持！
 
 <p align="center">
 
 
 </p>
+##  🎉 Cline Chinese被胜算云收购啦！（2026.07.20）
+Cline Chinese被胜算云收购啦！即日起，项目的后续代码维护、插件更新及日常运营工作，将全部交由胜算云团队负责。请您移步至新的项目地址，以获取最新版本与支持。<br>
+新项目地址：https://github.com/SSYCloud/cline-chinese<br>
+感谢各位的信任、陪伴与支持！
 
 ## 项目地址
 https://github.com/HybridTalentComputing/cline-chinese
