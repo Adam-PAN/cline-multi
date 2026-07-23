@@ -1,6 +1,6 @@
-# Cline Chinese 上游同步指南
+# Cline Multi 上游同步指南
 
-本文档记录如何将 Cline Chinese 从一个上游版本同步到新版本，以及过程中遇到的坑和解决方案。
+本文档记录如何将 Cline Multi 从一个上游版本同步到新版本，以及过程中遇到的坑和解决方案。
 
 ---
 
@@ -52,7 +52,7 @@ git commit -m "Sync with upstream <版本号>"
 
 ```
 remote: GitLab: LFS objects are missing. Ensure LFS objects are pushed before pushing branches.
-error: failed to push some refs to 'https://github.com/HybridTalentComputing/cline-chinese.git'
+error: failed to push some refs to 'https://github.com/Adam-PAN/cline-multi.git'
 ```
 
 **解决方案**: 在 `git push` 之前，先从上游获取并推送 LFS 对象：
@@ -74,35 +74,35 @@ git push origin <工作分支>
 
 ```json
 {
-  "name": "cline-chinese",
-  "displayName": "Cline Chinese",
+  "name": "cline-multi",
+  "displayName": "Cline Multi",
   "description": "%cline.description%",
-  "publisher": "HybridTalentComputing",
-  "author": { "name": "HybridTalentComputing" },
-  "repository": { "url": "https://github.com/HybridTalentComputing/cline-chinese" },
-  "homepage": "https://github.com/HybridTalentComputing/cline-chinese"
+  "publisher": "AdamPAN",
+  "author": { "name": "AdamPAN" },
+  "repository": { "url": "https://github.com/Adam-PAN/cline-multi" },
+  "homepage": "https://github.com/Adam-PAN/cline-multi"
 }
 ```
 
 版本号保持与上游一致。
 
-**坑 7**: 扩展标识符冲突。package.json 中所有以 `cline.` 开头的命令 ID（如 `cline.newTask`）、视图容器 ID（如 `claude-dev-ActivityBar`）、以及源码中硬编码的发布者引用（如 `saoudrizwan.claude-dev`），必须全部改为 `cline-chinese.` 前缀。否则与原版 Cline 扩展共存时会产生严重冲突（命令互相覆盖、视图混乱、配置串扰）。
+**坑 7**: 扩展标识符冲突。package.json 中所有以 `cline.` 开头的命令 ID（如 `cline.newTask`）、视图容器 ID（如 `claude-dev-ActivityBar`）、以及源码中硬编码的发布者引用（如 `saoudrizwan.claude-dev`），必须全部改为 `cline-multi.` 前缀。否则与原版 Cline 扩展共存时会产生严重冲突（命令互相覆盖、视图混乱、配置串扰）。
 
 **需要修改的地方**:
 
 1. **package.json** — 所有命令标识符:
    ```
-   "cline.newTask"        → "cline-chinese.newTask"
-   "cline.openInNewTab"   → "cline-chinese.openInNewTab"
+   "cline.newTask"        → "cline-multi.newTask"
+   "cline.openInNewTab"   → "cline-multi.openInNewTab"
    ...（所有 contributes.commands、menus、keybindings 中的引用）
    ```
    ActivityBar 和视图 ID:
    ```
-   "claude-dev-ActivityBar"          → "cline-chinese-ActivityBar"
-   "claude-dev.SidebarProvider"      → "cline-chinese.SidebarProvider"
+   "claude-dev-ActivityBar"          → "cline-multi-ActivityBar"
+   "claude-dev.SidebarProvider"      → "cline-multi.SidebarProvider"
    ```
 
-2. **源码中硬编码的命令引用** — 以下文件需要全局替换 `"cline.` 为 `"cline-chinese.`:
+2. **源码中硬编码的命令引用** — 以下文件需要全局替换 `"cline.` 为 `"cline-multi.`:
    - `src/extension.ts`
    - `src/dev/commands/tasks.ts`
    - `src/hosts/vscode/VscodeWebviewProvider.ts`
@@ -111,11 +111,11 @@ git push origin <工作分支>
    - `src/services/test/TestMode.ts`
 
 3. **其他身份引用**:
-   - `src/core/controller/ui/openWalkthrough.ts` — walkthrough 发布者改为 `HybridTalentComputing`
-   - `src/hosts/vscode/hostbridge/env/getIdeRedirectUri.ts` — OAuth URI 改为 `HybridTalentComputing.cline-chinese`
-   - `src/core/storage/state-migrations.ts` — `getConfiguration("cline")` 改为 `getConfiguration("cline-chinese")`
+   - `src/core/controller/ui/openWalkthrough.ts` — walkthrough 发布者改为 `AdamPAN`
+   - `src/hosts/vscode/hostbridge/env/getIdeRedirectUri.ts` — OAuth URI 改为 `AdamPAN.cline-multi`
+   - `src/core/storage/state-migrations.ts` — `getConfiguration("cline")` 改为 `getConfiguration("cline-multi")`
 
-**注意**: `src/registry.ts` 中有动态前缀逻辑 `const prefix = name === "claude-dev" ? "cline" : name`，这意味着只要 package.json 的 `name` 改为 `cline-chinese`，命令注册会自动使用正确前缀。但硬编码在字符串中的 `"cline.` 引用仍需手动修改。
+**注意**: `src/registry.ts` 中有动态前缀逻辑 `const prefix = name === "claude-dev" ? "cline" : name`，这意味着只要 package.json 的 `name` 改为 `cline-multi`，命令注册会自动使用正确前缀。但硬编码在字符串中的 `"cline.` 引用仍需手动修改。
 
 **验证方法**:
 ```bash
@@ -328,7 +328,7 @@ grep -rL "useTranslation" webview-ui/src/components/ --include="*.tsx" | grep -v
 - [ ] 确认上游 tag 存在: `git tag -l | grep <版本>`
 - [ ] 替换文件并提交
 - [ ] 修改 package.json 身份（6 个字段）
-- [ ] 修改所有扩展标识符避免冲突（`cline.` → `cline-chinese.`，详见坑 7）
+- [ ] 修改所有扩展标识符避免冲突（`cline.` → `cline-multi.`，详见坑 7）
 - [ ] 修改源码中硬编码的命令引用（6+ 个文件）
 - [ ] 修改 OAuth URI、walkthrough 发布者、configuration scope
 - [ ] 推送前先处理 LFS 对象: `git lfs fetch upstream <tag> && git lfs push --all origin <branch>`（详见坑 6）

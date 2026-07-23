@@ -6,7 +6,7 @@ import { DEFAULT_FOCUS_CHAIN_SETTINGS } from "@shared/FocusChainSettings"
 import { DEFAULT_MCP_DISPLAY_MODE } from "@shared/McpDisplayMode"
 import type { UserInfo } from "@shared/proto/cline/account"
 import { EmptyRequest } from "@shared/proto/cline/common"
-import type { OpenRouterCompatibleModelInfo, ShengSuanYunModelInfo } from "@shared/proto/cline/models"
+import type { OpenRouterCompatibleModelInfo } from "@shared/proto/cline/models"
 import { OnboardingModelGroup, type TerminalProfile } from "@shared/proto/cline/state"
 import { convertProtoToClineMessage } from "@shared/proto-conversions/cline-message"
 import { convertProtoMcpServersToMcpServers } from "@shared/proto-conversions/mcp/mcp-server-conversion"
@@ -27,6 +27,16 @@ import {
 import { Environment } from "../../../src/shared/config-types"
 import type { McpMarketplaceCatalog, McpServer, McpViewTab } from "../../../src/shared/mcp"
 import { McpServiceClient, ModelsServiceClient, StateServiceClient, UiServiceClient } from "../services/grpc-client"
+import {
+	type ApiConfigProfile,
+	addProfile,
+	getActiveProfileId,
+	loadProfiles,
+	removeProfile,
+	reorderProfiles,
+	setActiveProfileId,
+	updateProfile,
+} from "../utils/api-profiles"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	didHydrateState: boolean
@@ -36,7 +46,6 @@ export interface ExtensionStateContextType extends ExtensionState {
 	openRouterModels: Record<string, ModelInfo>
 	vercelAiGatewayModels: Record<string, ModelInfo>
 	hicapModels: Record<string, ModelInfo>
-	shengSuanYunModels: Record<string, ShengSuanYunModelInfo>
 	liteLlmModels: Record<string, ModelInfo>
 	openAiModels: string[]
 	requestyModels: Record<string, ModelInfo>
@@ -71,7 +80,6 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setGroqModels: (value: Record<string, ModelInfo>) => void
 	setBasetenModels: (value: Record<string, ModelInfo>) => void
 	setHuggingFaceModels: (value: Record<string, ModelInfo>) => void
-	setShengSuanYunModels: (value: Record<string, ShengSuanYunModelInfo>) => void
 	setGlobalClineRulesToggles: (toggles: Record<string, boolean>) => void
 	setLocalClineRulesToggles: (toggles: Record<string, boolean>) => void
 	setLocalCursorRulesToggles: (toggles: Record<string, boolean>) => void
@@ -94,7 +102,6 @@ export interface ExtensionStateContextType extends ExtensionState {
 	refreshOpenRouterModels: () => void
 	refreshVercelAiGatewayModels: () => void
 	refreshHicapModels: () => void
-	refreshShengSuanYunModels: () => void
 	refreshLiteLlmModels: () => Promise<void>
 	setUserInfo: (userInfo?: UserInfo) => void
 
@@ -121,6 +128,16 @@ export interface ExtensionStateContextType extends ExtensionState {
 
 	// Event callbacks
 	onRelinquishControl: (callback: () => void) => () => void
+
+	// API Config Profiles
+	apiProfiles: ApiConfigProfile[]
+	activeApiProfileId: string | undefined
+	applyApiProfile: (profileId: string) => Promise<void>
+	addApiProfile: (profile: Omit<ApiConfigProfile, "id">) => ApiConfigProfile
+	removeApiProfile: (id: string) => void
+	reorderApiProfiles: (fromIndex: number, toIndex: number) => void
+	updateApiProfile: (id: string, updates: Partial<Omit<ApiConfigProfile, "id">>) => void
+	refreshProfiles: () => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -306,7 +323,8 @@ export const ExtensionStateContextProvider: React.FC<{
 	})
 	const [vercelAiGatewayModels, setVercelAiGatewayModels] = useState<Record<string, ModelInfo>>({})
 	const [hicapModels, setHicapModels] = useState<Record<string, ModelInfo>>({})
-	const [shengSuanYunModels, setShengSuanYunModels] = useState<Record<string, ShengSuanYunModelInfo>>({})
+	const [apiProfiles, setApiProfiles] = useState<ApiConfigProfile[]>(() => loadProfiles())
+	const [activeApiProfileIdState, setActiveApiProfileIdState] = useState<string | undefined>(() => getActiveProfileId())
 	const [liteLlmModels, setLiteLlmModels] = useState<Record<string, ModelInfo>>({})
 	const [totalTasksSize, setTotalTasksSize] = useState<number | null>(null)
 	const [availableTerminalProfiles, setAvailableTerminalProfiles] = useState<TerminalProfile[]>([])
@@ -705,17 +723,6 @@ export const ExtensionStateContextProvider: React.FC<{
 			.catch((error: Error) => console.error("Failed to refresh OpenRouter models:", error))
 	}, [])
 
-	const refreshShengSuanYunModels = useCallback(() => {
-		ModelsServiceClient.refreshShengSuanYunModels(EmptyRequest.create({}))
-			.then((response) => {
-				const models = response.models
-				setShengSuanYunModels({
-					...models,
-				})
-			})
-			.catch((error: Error) => console.error("Failed to refresh ShengSuanYun models:", error))
-	}, [])
-
 	const refreshHicapModels = useCallback(() => {
 		ModelsServiceClient.refreshHicapModels(EmptyRequest.create({}))
 			.then((response: OpenRouterCompatibleModelInfo) => {
@@ -766,9 +773,6 @@ export const ExtensionStateContextProvider: React.FC<{
 		}
 		if (state.apiConfiguration?.basetenApiKey) {
 			refreshBasetenModels()
-			if (state.apiConfiguration?.shengSuanYunApiKey) {
-				refreshShengSuanYunModels()
-			}
 		}
 		if (state.apiConfiguration?.liteLlmApiKey) {
 			refreshLiteLlmModels()
@@ -801,6 +805,182 @@ export const ExtensionStateContextProvider: React.FC<{
 		}
 	}, [state.apiConfiguration?.actModeApiProvider, state.apiConfiguration?.planModeApiProvider, clineModels, refreshClineModels])
 
+	// API Config Profiles methods
+	const refreshProfiles = useCallback(() => {
+		setApiProfiles(loadProfiles())
+		setActiveApiProfileIdState(getActiveProfileId())
+	}, [])
+
+	const addApiProfileCb = useCallback((profile: Omit<ApiConfigProfile, "id">): ApiConfigProfile => {
+		const newProfile = addProfile(profile)
+		setApiProfiles(loadProfiles())
+		return newProfile
+	}, [])
+
+	const updateApiProfileCb = useCallback((id: string, updates: Partial<Omit<ApiConfigProfile, "id">>) => {
+		const updated = updateProfile(id, updates)
+		setApiProfiles(loadProfiles())
+		return updated
+	}, [])
+
+	const removeApiProfileCb = useCallback((id: string) => {
+		removeProfile(id)
+		setApiProfiles(loadProfiles())
+		setActiveApiProfileIdState(getActiveProfileId())
+	}, [])
+
+	const reorderApiProfiles = useCallback((fromIndex: number, toIndex: number) => {
+		setApiProfiles(reorderProfiles(fromIndex, toIndex))
+	}, [])
+
+	const clearActiveProfile = useCallback(() => {
+		setActiveProfileId(undefined)
+		setActiveApiProfileIdState(undefined)
+	}, [])
+
+	const applyApiProfile = useCallback(
+		async (profileId: string) => {
+			const profile = loadProfiles().find((p) => p.id === profileId)
+			if (!profile) return
+
+			setActiveProfileId(profileId)
+			setActiveApiProfileIdState(profileId)
+
+			// Build the config update based on the profile's provider
+			const providerApiKeyField: Record<string, string> = {
+				anthropic: "apiKey",
+				"claude-code": "apiKey",
+				openrouter: "openRouterApiKey",
+				bedrock: "awsBedrockApiKey",
+				openai: "openAiApiKey",
+				ollama: "ollamaApiKey",
+				lmstudio: "lmStudioApiKey",
+				gemini: "geminiApiKey",
+				"openai-native": "openAiNativeApiKey",
+				"openai-codex": "openAiCodexApiKey",
+				deepseek: "deepSeekApiKey",
+				qwen: "qwenApiKey",
+				"qwen-code": "qwenCodeApiKey",
+				doubao: "doubaoApiKey",
+				mistral: "mistralApiKey",
+				litellm: "liteLlmApiKey",
+				moonshot: "moonshotApiKey",
+				nebius: "nebiusApiKey",
+				fireworks: "fireworksApiKey",
+				asksage: "asksageApiKey",
+				xai: "xaiApiKey",
+				sambanova: "sambanovaApiKey",
+				cerebras: "cerebrasApiKey",
+				sapaicore: "sapAiCoreApiKey",
+				groq: "groqApiKey",
+				huggingface: "huggingFaceApiKey",
+				"huawei-cloud-maas": "huaweiCloudMaasApiKey",
+				dify: "difyApiKey",
+				baseten: "basetenApiKey",
+				"vercel-ai-gateway": "vercelAiGatewayApiKey",
+				zai: "zaiApiKey",
+				minimax: "minimaxApiKey",
+				hicap: "hicapApiKey",
+				aihubmix: "aihubmixApiKey",
+				requesty: "requestyApiKey",
+				together: "togetherApiKey",
+				nousResearch: "nousResearchApiKey",
+				cline: "clineApiKey",
+				"vscode-lm": "",
+			}
+
+			const providerModelIdField: Record<string, string> = {
+				openrouter: "actModeOpenRouterModelId",
+				openai: "actModeOpenAiModelId",
+				"openai-native": "actModeApiModelId",
+				"openai-codex": "actModeApiModelId",
+				deepseek: "actModeApiModelId",
+				qwen: "actModeApiModelId",
+				"qwen-code": "actModeApiModelId",
+				doubao: "actModeApiModelId",
+				mistral: "actModeApiModelId",
+				anthropic: "actModeApiModelId",
+				"claude-code": "actModeApiModelId",
+				bedrock: "actModeApiModelId",
+				vertex: "actModeApiModelId",
+				gemini: "actModeApiModelId",
+				ollama: "actModeOllamaModelId",
+				lmstudio: "actModeLmStudioModelId",
+				litellm: "actModeLiteLlmModelId",
+				requesty: "actModeRequestyModelId",
+				together: "actModeTogetherModelId",
+				fireworks: "actModeFireworksModelId",
+				sapaicore: "actModeSapAiCoreModelId",
+				groq: "actModeGroqModelId",
+				baseten: "actModeBasetenModelId",
+				huggingface: "actModeHuggingFaceModelId",
+				"huawei-cloud-maas": "actModeHuaweiCloudMaasModelId",
+				oca: "actModeOcaModelId",
+				aihubmix: "actModeAihubmixModelId",
+				hicap: "actModeHicapModelId",
+				nousResearch: "actModeNousResearchModelId",
+				"vercel-ai-gateway": "actModeVercelAiGatewayModelId",
+				cline: "actModeClineModelId",
+				"vscode-lm": "",
+				sambanova: "actModeSambanovaModelId",
+				cerebras: "actModeCerebrasModelId",
+				asksage: "actModeApiModelId",
+				xai: "actModeApiModelId",
+				moonshot: "actModeApiModelId",
+				nebius: "actModeApiModelId",
+				dify: "actModeApiModelId",
+				minimax: "actModeApiModelId",
+				zai: "actModeApiModelId",
+			}
+
+			const updates: Record<string, any> = {
+				actModeApiProvider: profile.provider,
+				planModeApiProvider: profile.provider,
+			}
+
+			const keyField = providerApiKeyField[profile.provider]
+			if (keyField && profile.apiKey) {
+				updates[keyField] = profile.apiKey
+			}
+
+			const modelField = providerModelIdField[profile.provider]
+			if (modelField && profile.modelId) {
+				updates[modelField] = profile.modelId
+			}
+
+			if (profile.baseUrl) {
+				const baseUrlFields: Record<string, string> = {
+					openai: "openAiBaseUrl",
+					ollama: "ollamaBaseUrl",
+					lmstudio: "lmStudioBaseUrl",
+					litellm: "liteLlmBaseUrl",
+					anthropic: "anthropicBaseUrl",
+					"openai-native": "openAiNativeBaseUrl",
+					deepseek: "deepSeekBaseUrl",
+				}
+				const bf = baseUrlFields[profile.provider]
+				if (bf) updates[bf] = profile.baseUrl
+			}
+
+			if (profile.extra) {
+				Object.assign(updates, profile.extra)
+			}
+
+			// Apply via the existing RPC
+			const { convertApiConfigurationToProto } = await import(
+				"@shared/proto-conversions/models/api-configuration-conversion"
+			)
+			const { UpdateApiConfigurationRequest } = await import("@shared/proto/cline/models")
+
+			const currentConfig = state.apiConfiguration || {}
+			const mergedConfig = { ...currentConfig, ...updates }
+			const protoConfig = convertApiConfigurationToProto(mergedConfig)
+			await ModelsServiceClient.updateApiConfigurationProto(
+				UpdateApiConfigurationRequest.create({ apiConfiguration: protoConfig }),
+			)
+		},
+		[state.apiConfiguration],
+	)
 	const contextValue: ExtensionStateContextType = {
 		...state,
 		didHydrateState,
@@ -810,7 +990,6 @@ export const ExtensionStateContextProvider: React.FC<{
 		openRouterModels,
 		vercelAiGatewayModels,
 		hicapModels,
-		shengSuanYunModels,
 		liteLlmModels,
 		openAiModels,
 		requestyModels,
@@ -870,7 +1049,6 @@ export const ExtensionStateContextProvider: React.FC<{
 		setGroqModels,
 		setBasetenModels,
 		setHuggingFaceModels,
-		setShengSuanYunModels,
 		setMcpMarketplaceCatalog,
 		setShowMcp,
 		closeMcpView,
@@ -935,12 +1113,21 @@ export const ExtensionStateContextProvider: React.FC<{
 		refreshOpenRouterModels,
 		refreshVercelAiGatewayModels,
 		refreshHicapModels,
-		refreshShengSuanYunModels,
 		refreshLiteLlmModels,
 		onRelinquishControl,
 		setUserInfo: (userInfo?: UserInfo) => setState((prevState) => ({ ...prevState, userInfo })),
 		expandTaskHeader,
 		setExpandTaskHeader,
+
+		// API Config Profiles
+		apiProfiles,
+		activeApiProfileId: activeApiProfileIdState,
+		applyApiProfile,
+		addApiProfile: addApiProfileCb,
+		removeApiProfile: removeApiProfileCb,
+		reorderApiProfiles,
+		updateApiProfile: updateApiProfileCb,
+		refreshProfiles,
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

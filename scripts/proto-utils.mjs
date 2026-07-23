@@ -1,11 +1,10 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 import * as grpc from "@grpc/grpc-js"
 import * as protoLoader from "@grpc/proto-loader"
-import * as fs from "fs/promises"
 import * as path from "path"
 
-const DESCRIPTOR_SET = path.resolve("dist-standalone/proto/descriptor_set.pb")
+const PROTO_DIR = path.resolve("proto")
 
 const typeNameToFQN = new Map()
 
@@ -24,9 +23,30 @@ export function getFqn(name) {
 }
 
 export async function getPackageDefinition() {
-	const descriptorBuffer = await fs.readFile(DESCRIPTOR_SET)
-	const options = { longs: Number } // Encode int64 fields as numbers
-	return protoLoader.loadFileDescriptorSetFromBuffer(descriptorBuffer, options)
+	// Load only entry-point files that transitively import everything else
+	// to avoid duplicate type definitions. @grpc/proto-loader resolves imports.
+	const entryFiles = [
+		path.join(PROTO_DIR, "cline", "state.proto"), // imports common, browser, models
+		path.join(PROTO_DIR, "cline", "account.proto"),
+		path.join(PROTO_DIR, "cline", "checkpoints.proto"),
+		path.join(PROTO_DIR, "cline", "commands.proto"),
+		path.join(PROTO_DIR, "cline", "file.proto"),
+		path.join(PROTO_DIR, "cline", "hooks.proto"),
+		path.join(PROTO_DIR, "cline", "mcp.proto"),
+		path.join(PROTO_DIR, "cline", "oca_account.proto"),
+		path.join(PROTO_DIR, "cline", "slash.proto"),
+		path.join(PROTO_DIR, "cline", "task.proto"),
+		path.join(PROTO_DIR, "cline", "ui.proto"),
+		path.join(PROTO_DIR, "cline", "web.proto"),
+		path.join(PROTO_DIR, "cline", "worktree.proto"),
+		path.join(PROTO_DIR, "host", "diff.proto"),
+		path.join(PROTO_DIR, "host", "env.proto"),
+		path.join(PROTO_DIR, "host", "testing.proto"),
+		path.join(PROTO_DIR, "host", "window.proto"),
+		path.join(PROTO_DIR, "host", "workspace.proto"),
+	]
+	const options = { longs: Number, keepCase: true, includeDirs: [PROTO_DIR] }
+	return protoLoader.load(entryFiles, options)
 }
 
 export async function loadProtoDescriptorSet() {
@@ -35,7 +55,7 @@ export async function loadProtoDescriptorSet() {
 }
 
 export async function loadServicesFromProtoDescriptor() {
-	// Load service definitions from descriptor set
+	// Load service definitions directly from .proto files via @grpc/proto-loader
 	const proto = await loadProtoDescriptorSet()
 
 	// Extract host services and proto messages from the proto definition

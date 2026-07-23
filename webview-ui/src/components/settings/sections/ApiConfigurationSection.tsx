@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { StateServiceClient } from "@/services/grpc-client"
 import { TabButton } from "../../mcp/configuration/McpConfigurationView"
-import ApiOptions from "../ApiOptions"
+import ApiOptions, { ProfileManager } from "../ApiOptions"
 import Section from "../Section"
 import { syncModeConfigurations } from "../utils/providerUtils"
 import { useApiConfigurationHandlers } from "../utils/useApiConfigurationHandlers"
@@ -25,6 +25,9 @@ const ApiConfigurationSection = ({ renderSectionHeader, initialModelTab }: ApiCo
 		<div>
 			{renderSectionHeader?.("api-config")}
 			<Section>
+				{/* Profile cards */}
+				<ProfileManager currentMode={planActSeparateModelsSetting ? currentTab : mode} showCards={true} />
+
 				{/* Tabs container */}
 				{planActSeparateModelsSetting ? (
 					<div className="rounded-md mb-5">
@@ -60,7 +63,7 @@ const ApiConfigurationSection = ({ renderSectionHeader, initialModelTab }: ApiCo
 					<ApiOptions currentMode={mode} initialModelTab={initialModelTab} showModelOptions={true} />
 				)}
 
-				<div className="mb-[5px]">
+				<div className="mb-[5px]" style={{ display: "none" }}>
 					<VSCodeCheckbox
 						checked={planActSeparateModelsSetting}
 						className="mb-[5px]"

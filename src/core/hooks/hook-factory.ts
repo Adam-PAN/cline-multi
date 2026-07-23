@@ -206,7 +206,7 @@ export abstract class HookRunner<Name extends HookName> {
 			slug: params.model?.slug?.trim() || "unknown",
 		}
 
-		return {
+		return HookInput.create({
 			clineVersion,
 			hookName: this.hookName,
 			timestamp: Date.now().toString(),
@@ -214,7 +214,7 @@ export abstract class HookRunner<Name extends HookName> {
 			userId: getDistinctId(), // Always available: Cline User ID, machine ID, or generated UUID
 			...params,
 			model,
-		}
+		})
 	}
 }
 

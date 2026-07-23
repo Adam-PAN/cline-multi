@@ -48,7 +48,6 @@ import { QwenProvider } from "./providers/QwenProvider"
 import { RequestyProvider } from "./providers/RequestyProvider"
 import { SambanovaProvider } from "./providers/SambanovaProvider"
 import { SapAiCoreProvider } from "./providers/SapAiCoreProvider"
-import { ShengSuanYunProvider } from "./providers/ShengSuanYunProvider"
 import { TogetherProvider } from "./providers/TogetherProvider"
 import { VercelAIGatewayProvider } from "./providers/VercelAIGatewayProvider"
 import { VertexProvider } from "./providers/VertexProvider"
@@ -89,6 +88,269 @@ declare module "vscode" {
 		version?: string
 		id?: string
 	}
+}
+
+export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; showSaveButton?: boolean }> = ({
+	currentMode,
+	showCards = true,
+	showSaveButton = false,
+}) => {
+	const {
+		apiProfiles,
+		activeApiProfileId,
+		addApiProfile,
+		removeApiProfile,
+		updateApiProfile,
+		reorderApiProfiles,
+		applyApiProfile,
+		apiConfiguration,
+	} = useExtensionState()
+	const { selectedProvider } = normalizeApiConfiguration(apiConfiguration, currentMode)
+	const [dragIdx, setDragIdx] = useState<number | null>(null)
+	const [overIdx, setOverIdx] = useState<number | null>(null)
+
+	const getProviderDisplayName = (pv: string) => PROVIDERS.list.find((p: any) => p.value === pv)?.label || pv
+
+	const getCurrentModelId = () => {
+		const { selectedModelId } = normalizeApiConfiguration(apiConfiguration, currentMode)
+		return selectedModelId || ""
+	}
+
+	const getCurrentApiKey = () => {
+		if (!apiConfiguration) return ""
+		const cfg = apiConfiguration as Record<string, any>
+		return cfg[`${selectedProvider}ApiKey`] || cfg.apiKey || ""
+	}
+
+	const getCurrentBaseUrl = () => {
+		if (!apiConfiguration) return ""
+		const cfg = apiConfiguration as Record<string, any>
+		const keys = [`${selectedProvider}BaseUrl`, `${selectedProvider}Endpoint`, `${selectedProvider}ApiUrl`]
+		if (selectedProvider === "openai-native" || selectedProvider === "openai") keys.push("openAiBaseUrl")
+		if (selectedProvider === "ollama") keys.push("ollamaBaseUrl")
+		if (selectedProvider === "lmstudio") keys.push("lmStudioBaseUrl")
+		if (selectedProvider === "litellm") keys.push("litellmBaseUrl")
+		if (selectedProvider === "dify") keys.push("difyBaseUrl")
+		for (const k of keys) {
+			if (cfg[k]) return cfg[k]
+		}
+		return ""
+	}
+
+	const profilePayload = () => ({
+		provider: selectedProvider,
+		apiKey: getCurrentApiKey(),
+		modelId: getCurrentModelId(),
+		baseUrl: getCurrentBaseUrl(),
+	})
+
+	const handleSave = () => {
+		if (activeApiProfileId) {
+			updateApiProfile(activeApiProfileId, profilePayload())
+		} else {
+			const mid = getCurrentModelId()
+			addApiProfile({
+				name: mid ? `${getProviderDisplayName(selectedProvider)} / ${mid}` : getProviderDisplayName(selectedProvider),
+				...profilePayload(),
+			})
+		}
+	}
+
+	const handleAdd = () => {
+		const mid = getCurrentModelId()
+		const newP = addApiProfile({
+			name: mid ? `${getProviderDisplayName(selectedProvider)} / ${mid}` : getProviderDisplayName(selectedProvider),
+			...profilePayload(),
+		})
+		applyApiProfile(newP.id)
+	}
+
+	const handleDelete = (id: string, e: React.MouseEvent) => {
+		e.stopPropagation()
+		removeApiProfile(id)
+	}
+
+	const handleDragStart = (e: React.DragEvent, i: number) => {
+		setDragIdx(i)
+		e.dataTransfer.effectAllowed = "move"
+		e.dataTransfer.setData("text/plain", String(i))
+	}
+	const handleDragOver = (e: React.DragEvent, i: number) => {
+		e.preventDefault()
+		e.dataTransfer.dropEffect = "move"
+		setOverIdx(i)
+	}
+	const handleDrop = (e: React.DragEvent, i: number) => {
+		e.preventDefault()
+		if (dragIdx !== null && dragIdx !== i) reorderApiProfiles(dragIdx, i)
+		setDragIdx(null)
+		setOverIdx(null)
+	}
+	const handleDragEnd = () => {
+		setDragIdx(null)
+		setOverIdx(null)
+	}
+
+	// Save button only
+	if (showSaveButton && !showCards) {
+		return (
+			<button
+				onClick={handleSave}
+				onMouseEnter={(e) => {
+					;(e.currentTarget as HTMLElement).style.background =
+						"color-mix(in srgb, var(--vscode-focusBorder) 12%, transparent)"
+				}}
+				onMouseLeave={(e) => {
+					;(e.currentTarget as HTMLElement).style.background = "transparent"
+				}}
+				style={{
+					display: "inline-flex",
+					alignItems: "center",
+					gap: 4,
+					padding: "3px 10px",
+					borderRadius: 4,
+					border: "1px solid var(--vscode-focusBorder)",
+					background: "transparent",
+					color: "var(--vscode-focusBorder)",
+					cursor: "pointer",
+					fontSize: 12,
+					whiteSpace: "nowrap",
+				}}>
+				<span className="codicon codicon-save" style={{ fontSize: 13 }} />
+				{"保存配置"}
+			</button>
+		)
+	}
+
+	// Cards grid
+	if (!showCards) return null
+	return (
+		<div style={{ marginBottom: 4 }}>
+			<div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+				{apiProfiles.map((profile, i) => {
+					const isActive = profile.id === activeApiProfileId
+					const isDragging = dragIdx === i
+					const isOver = overIdx === i && dragIdx !== null && dragIdx !== i
+					return (
+						<div
+							draggable
+							key={profile.id}
+							onClick={() => applyApiProfile(profile.id)}
+							onDragEnd={handleDragEnd}
+							onDragOver={(e) => handleDragOver(e, i)}
+							onDragStart={(e) => handleDragStart(e, i)}
+							onDrop={(e) => handleDrop(e, i)}
+							style={{
+								position: "relative",
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "center",
+								justifyContent: "center",
+								gap: 3,
+								padding: "10px 8px 8px",
+								borderRadius: 6,
+								minHeight: 56,
+								cursor: "grab",
+								transition: "border-color 0.15s, background 0.15s, opacity 0.15s, transform 0.15s",
+								overflow: "hidden",
+								background: isActive
+									? "color-mix(in srgb, var(--vscode-focusBorder) 10%, transparent)"
+									: "var(--vscode-input-background, rgba(128,128,128,0.06))",
+								border: isOver
+									? "2px dashed var(--vscode-focusBorder)"
+									: isActive
+										? "1.5px solid var(--vscode-focusBorder)"
+										: "1px solid var(--vscode-focusBorder, #007acc)",
+								opacity: isDragging ? 0.4 : 1,
+								transform: isOver ? "scale(1.03)" : "none",
+							}}>
+							<button
+								onClick={(e) => handleDelete(profile.id, e)}
+								onMouseEnter={(e) => {
+									;(e.currentTarget as HTMLElement).style.opacity = "1"
+									;(e.currentTarget as HTMLElement).style.background = "var(--vscode-toolbar-hoverBackground)"
+								}}
+								onMouseLeave={(e) => {
+									;(e.currentTarget as HTMLElement).style.opacity = "0.3"
+									;(e.currentTarget as HTMLElement).style.background = "transparent"
+								}}
+								style={{
+									position: "absolute",
+									top: 3,
+									right: 3,
+									width: 18,
+									height: 18,
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									background: "transparent",
+									border: "none",
+									borderRadius: 3,
+									cursor: "pointer",
+									color: "var(--vscode-foreground)",
+									opacity: 0.3,
+									fontSize: 13,
+									lineHeight: 1,
+									padding: 0,
+								}}
+								title="删除">
+								{"\u00D7"}
+							</button>
+							<div
+								style={{
+									fontWeight: 500,
+									fontSize: 12,
+									lineHeight: "15px",
+									textAlign: "center",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									whiteSpace: "nowrap",
+									maxWidth: "100%",
+									color: isActive ? "var(--vscode-focusBorder)" : "var(--vscode-foreground)",
+								}}>
+								{profile.modelId || profile.name}
+							</div>
+							<div
+								style={{
+									fontSize: 10,
+									lineHeight: "13px",
+									textAlign: "center",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									whiteSpace: "nowrap",
+									maxWidth: "100%",
+									opacity: 0.6,
+								}}>
+								{getProviderDisplayName(profile.provider)}
+							</div>
+						</div>
+					)
+				})}
+				<div
+					onClick={handleAdd}
+					onMouseEnter={(e) => {
+						;(e.currentTarget as HTMLElement).style.borderColor = "var(--vscode-focusBorder)"
+					}}
+					onMouseLeave={(e) => {
+						;(e.currentTarget as HTMLElement).style.borderColor =
+							"var(--vscode-widget-border, rgba(128,128,128,0.25))"
+					}}
+					style={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						borderRadius: 6,
+						minHeight: 56,
+						cursor: "pointer",
+						background: "transparent",
+						border: "1.5px dashed var(--vscode-widget-border, rgba(128,128,128,0.25))",
+						transition: "border-color 0.15s",
+					}}>
+					<span style={{ fontSize: 22, lineHeight: 1, opacity: 0.5 }}>+</span>
+				</div>
+			</div>
+		</div>
+	)
 }
 
 const ApiOptions = ({
@@ -273,282 +535,298 @@ const ApiOptions = ({
 		<div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: isPopup ? -10 : 0 }}>
 			<style>
 				{`
-				.provider-item-highlight {
+				vscode-text-field {
+						width: 100% !important;
+					}
+					.provider-item-highlight {
 					background-color: var(--vscode-editor-findMatchHighlightBackground);
 					color: inherit;
 				}
 				`}
 			</style>
-			<DropdownContainer className="dropdown-container">
-				{remoteConfigSettings?.remoteConfiguredProviders && remoteConfigSettings.remoteConfiguredProviders.length > 0 ? (
-					<Tooltip>
-						<TooltipTrigger>
-							<div className="flex items-center gap-2 mb-1">
-								<label htmlFor="api-provider">
-									<span style={{ fontWeight: 500 }}>{t("settings.apiProvider")}</span>
-								</label>
-								<i className="codicon codicon-lock text-description text-sm" />
-							</div>
-						</TooltipTrigger>
-						<TooltipContent>{t("settings.providerManagedByOrg")}</TooltipContent>
-					</Tooltip>
-				) : (
-					<label htmlFor="api-provider">
-						<span style={{ fontWeight: 500 }}>{t("settings.apiProvider")}</span>
-					</label>
-				)}
-				<ProviderDropdownWrapper ref={dropdownRef}>
-					<VSCodeTextField
-						data-testid="provider-selector-input"
-						id="api-provider"
-						onFocus={() => {
-							setIsDropdownVisible(true)
-							setSearchTerm("")
-						}}
-						onInput={(e) => {
-							setSearchTerm((e.target as HTMLInputElement)?.value || "")
-							setIsDropdownVisible(true)
-						}}
-						onKeyDown={handleKeyDown}
-						placeholder={t("settings.searchSelectProvider")}
-						role="combobox"
-						style={{
-							width: "100%",
-							zIndex: DROPDOWN_Z_INDEX,
-							position: "relative",
-							minWidth: 130,
-						}}
-						value={searchTerm}>
-						{searchTerm && searchTerm !== currentProviderLabel && (
-							<div
-								aria-label={t("settings.clearSearch")}
-								className="input-icon-button codicon codicon-close"
-								onClick={() => {
-									setSearchTerm("")
-									setIsDropdownVisible(true)
-								}}
-								slot="end"
-								style={{
-									display: "flex",
-									justifyContent: "center",
-									alignItems: "center",
-									height: "100%",
-								}}
-							/>
-						)}
-					</VSCodeTextField>
-					{isDropdownVisible && (
-						<ProviderDropdownList ref={dropdownListRef} role="listbox">
-							{providerSearchResults.map((item, index) => (
-								<ProviderDropdownItem
-									data-testid={`provider-option-${item.value}`}
-									isSelected={index === selectedIndex}
-									key={item.value}
-									onClick={() => handleProviderChange(item.value)}
-									onMouseEnter={() => setSelectedIndex(index)}
-									ref={(el) => {
-										itemRefs.current[index] = el
-									}}
-									role="option">
-									<span>{item.html}</span>
-								</ProviderDropdownItem>
-							))}
-						</ProviderDropdownList>
+
+			<div
+				style={{
+					position: "relative",
+					border: "1.5px dashed var(--vscode-widget-border, rgba(128,128,128,0.3))",
+					borderRadius: 8,
+					padding: "16px 14px 14px",
+					display: "flex",
+					flexDirection: "column",
+					gap: 5,
+				}}>
+				<div style={{ position: "absolute", top: 2, right: 8, zIndex: 10 }}>
+					<ProfileManager currentMode={currentMode} showCards={false} showSaveButton={true} />
+				</div>
+
+				<DropdownContainer className="dropdown-container">
+					{remoteConfigSettings?.remoteConfiguredProviders &&
+					remoteConfigSettings.remoteConfiguredProviders.length > 0 ? (
+						<Tooltip>
+							<TooltipTrigger>
+								<div className="flex items-center gap-2 mb-1">
+									<label htmlFor="api-provider">
+										<span style={{ fontWeight: 500 }}>{t("settings.apiProvider")}</span>
+									</label>
+									<i className="codicon codicon-lock text-description text-sm" />
+								</div>
+							</TooltipTrigger>
+							<TooltipContent>{t("settings.providerManagedByOrg")}</TooltipContent>
+						</Tooltip>
+					) : (
+						<label htmlFor="api-provider">
+							<span style={{ fontWeight: 500 }}>{t("settings.apiProvider")}</span>
+						</label>
 					)}
-				</ProviderDropdownWrapper>
-			</DropdownContainer>
+					<ProviderDropdownWrapper ref={dropdownRef}>
+						<VSCodeTextField
+							data-testid="provider-selector-input"
+							id="api-provider"
+							onFocus={() => {
+								setIsDropdownVisible(true)
+								setSearchTerm("")
+							}}
+							onInput={(e) => {
+								setSearchTerm((e.target as HTMLInputElement)?.value || "")
+								setIsDropdownVisible(true)
+							}}
+							onKeyDown={handleKeyDown}
+							placeholder={t("settings.searchSelectProvider")}
+							role="combobox"
+							style={{
+								width: "100%",
+								zIndex: DROPDOWN_Z_INDEX,
+								position: "relative",
+								minWidth: 130,
+							}}
+							value={searchTerm}>
+							{searchTerm && searchTerm !== currentProviderLabel && (
+								<div
+									aria-label={t("settings.clearSearch")}
+									className="input-icon-button codicon codicon-close"
+									onClick={() => {
+										setSearchTerm("")
+										setIsDropdownVisible(true)
+									}}
+									slot="end"
+									style={{
+										display: "flex",
+										justifyContent: "center",
+										alignItems: "center",
+										height: "100%",
+									}}
+								/>
+							)}
+						</VSCodeTextField>
+						{isDropdownVisible && (
+							<ProviderDropdownList ref={dropdownListRef} role="listbox">
+								{providerSearchResults.map((item, index) => (
+									<ProviderDropdownItem
+										data-testid={`provider-option-${item.value}`}
+										isSelected={index === selectedIndex}
+										key={item.value}
+										onClick={() => handleProviderChange(item.value)}
+										onMouseEnter={() => setSelectedIndex(index)}
+										ref={(el) => {
+											itemRefs.current[index] = el
+										}}
+										role="option">
+										<span>{item.html}</span>
+									</ProviderDropdownItem>
+								))}
+							</ProviderDropdownList>
+						)}
+					</ProviderDropdownWrapper>
+				</DropdownContainer>
 
-			{apiConfiguration && selectedProvider === "hicap" && (
-				<HicapProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "hicap" && (
+					<HicapProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "cline" && (
-				<ClineProvider
-					currentMode={currentMode}
-					initialModelTab={initialModelTab}
-					isPopup={isPopup}
-					showModelOptions={showModelOptions}
-				/>
-			)}
+				{apiConfiguration && selectedProvider === "cline" && (
+					<ClineProvider
+						currentMode={currentMode}
+						initialModelTab={initialModelTab}
+						isPopup={isPopup}
+						showModelOptions={showModelOptions}
+					/>
+				)}
 
-			{apiConfiguration && selectedProvider === "asksage" && (
-				<AskSageProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "asksage" && (
+					<AskSageProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "anthropic" && (
-				<AnthropicProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "anthropic" && (
+					<AnthropicProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "claude-code" && (
-				<ClaudeCodeProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "claude-code" && (
+					<ClaudeCodeProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "openai-native" && (
-				<OpenAINativeProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "openai-native" && (
+					<OpenAINativeProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "openai-codex" && (
-				<OpenAiCodexProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "openai-codex" && (
+					<OpenAiCodexProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "qwen" && (
-				<QwenProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "qwen" && (
+					<QwenProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "qwen-code" && (
-				<QwenCodeProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "qwen-code" && (
+					<QwenCodeProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "doubao" && (
-				<DoubaoProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "doubao" && (
+					<DoubaoProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "mistral" && (
-				<MistralProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "mistral" && (
+					<MistralProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "openrouter" && (
-				<OpenRouterProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "openrouter" && (
+					<OpenRouterProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "deepseek" && (
-				<DeepSeekProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "deepseek" && (
+					<DeepSeekProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "together" && (
-				<TogetherProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "together" && (
+					<TogetherProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "openai" && (
-				<OpenAICompatibleProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "openai" && (
+					<OpenAICompatibleProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "vercel-ai-gateway" && (
-				<VercelAIGatewayProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "vercel-ai-gateway" && (
+					<VercelAIGatewayProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "sambanova" && (
-				<SambanovaProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "sambanova" && (
+					<SambanovaProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "bedrock" && (
-				<BedrockProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "bedrock" && (
+					<BedrockProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "vertex" && (
-				<VertexProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "vertex" && (
+					<VertexProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "gemini" && (
-				<GeminiProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "gemini" && (
+					<GeminiProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "requesty" && (
-				<RequestyProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "requesty" && (
+					<RequestyProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "fireworks" && (
-				<FireworksProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "fireworks" && (
+					<FireworksProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "vscode-lm" && <VSCodeLmProvider currentMode={currentMode} />}
+				{apiConfiguration && selectedProvider === "vscode-lm" && <VSCodeLmProvider currentMode={currentMode} />}
 
-			{apiConfiguration && selectedProvider === "groq" && (
-				<GroqProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
-			{apiConfiguration && selectedProvider === "baseten" && (
-				<BasetenProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
-			{apiConfiguration && selectedProvider === "litellm" && (
-				<LiteLlmProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "groq" && (
+					<GroqProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
+				{apiConfiguration && selectedProvider === "baseten" && (
+					<BasetenProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
+				{apiConfiguration && selectedProvider === "litellm" && (
+					<LiteLlmProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "lmstudio" && (
-				<LMStudioProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "lmstudio" && (
+					<LMStudioProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "ollama" && (
-				<OllamaProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "ollama" && (
+					<OllamaProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "moonshot" && (
-				<MoonshotProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "moonshot" && (
+					<MoonshotProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "huggingface" && (
-				<HuggingFaceProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "huggingface" && (
+					<HuggingFaceProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "nebius" && (
-				<NebiusProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "nebius" && (
+					<NebiusProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "wandb" && (
-				<WandbProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "wandb" && (
+					<WandbProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "xai" && (
-				<XaiProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "xai" && (
+					<XaiProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "cerebras" && (
-				<CerebrasProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "cerebras" && (
+					<CerebrasProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "sapaicore" && (
-				<SapAiCoreProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "sapaicore" && (
+					<SapAiCoreProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "huawei-cloud-maas" && (
-				<HuaweiCloudMaasProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "huawei-cloud-maas" && (
+					<HuaweiCloudMaasProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "dify" && (
-				<DifyProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "dify" && (
+					<DifyProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "zai" && (
-				<ZAiProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "zai" && (
+					<ZAiProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "shengsuanyun" && (
-				<ShengSuanYunProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "minimax" && (
+					<MinimaxProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "minimax" && (
-				<MinimaxProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "nousResearch" && (
+					<NousResearchProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "nousResearch" && (
-				<NousResearchProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
+				{apiConfiguration && selectedProvider === "oca" && <OcaProvider currentMode={currentMode} isPopup={isPopup} />}
 
-			{apiConfiguration && selectedProvider === "oca" && <OcaProvider currentMode={currentMode} isPopup={isPopup} />}
+				{apiConfiguration && selectedProvider === "aihubmix" && (
+					<AIhubmixProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
+				)}
 
-			{apiConfiguration && selectedProvider === "aihubmix" && (
-				<AIhubmixProvider currentMode={currentMode} isPopup={isPopup} showModelOptions={showModelOptions} />
-			)}
-
-			{apiErrorMessage && (
-				<p
-					style={{
-						margin: "-10px 0 4px 0",
-						fontSize: 12,
-						color: "var(--vscode-errorForeground)",
-					}}>
-					{apiErrorMessage}
-				</p>
-			)}
-			{modelIdErrorMessage && (
-				<p
-					style={{
-						margin: "-10px 0 4px 0",
-						fontSize: 12,
-						color: "var(--vscode-errorForeground)",
-					}}>
-					{modelIdErrorMessage}
-				</p>
-			)}
+				{apiErrorMessage && (
+					<p
+						style={{
+							margin: "-10px 0 4px 0",
+							fontSize: 12,
+							color: "var(--vscode-errorForeground)",
+						}}>
+						{apiErrorMessage}
+					</p>
+				)}
+				{modelIdErrorMessage && (
+					<p
+						style={{
+							margin: "-10px 0 4px 0",
+							fontSize: 12,
+							color: "var(--vscode-errorForeground)",
+						}}>
+						{modelIdErrorMessage}
+					</p>
+				)}
+			</div>
 		</div>
 	)
 }

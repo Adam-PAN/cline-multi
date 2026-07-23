@@ -15,9 +15,7 @@ describe("McpOAuthRedirectResolver", () => {
 		})
 
 		it("should return undefined for vscode:// URLs", () => {
-			const port = McpOAuthRedirectResolver.extractLoopbackPort(
-				"vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123",
-			)
+			const port = McpOAuthRedirectResolver.extractLoopbackPort("vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123")
 			should(port).be.undefined()
 		})
 
@@ -59,7 +57,7 @@ describe("McpOAuthRedirectResolver", () => {
 		})
 
 		it("should return false for vscode:// URLs", () => {
-			McpOAuthRedirectResolver.isLoopbackUrl("vscode://HybridTalentComputing.cline-chinese/path").should.be.false()
+			McpOAuthRedirectResolver.isLoopbackUrl("vscode://AdamPAN.cline-multi/path").should.be.false()
 		})
 
 		it("should return false for https:// URLs", () => {
@@ -85,8 +83,8 @@ describe("McpOAuthRedirectResolver", () => {
 
 		it("should return true for identical vscode:// URLs", () => {
 			McpOAuthRedirectResolver.isRedirectCompatible(
-				"vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123",
-				"vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123",
+				"vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123",
+				"vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123",
 			).should.be.true()
 		})
 
@@ -113,7 +111,7 @@ describe("McpOAuthRedirectResolver", () => {
 
 		it("should return false when schemes differ (VSCode → JetBrains migration)", () => {
 			McpOAuthRedirectResolver.isRedirectCompatible(
-				"vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123",
+				"vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123",
 				"http://127.0.0.1:48801/mcp-auth/callback/abc123",
 			).should.be.false()
 		})
@@ -121,7 +119,7 @@ describe("McpOAuthRedirectResolver", () => {
 		it("should return false when schemes differ (JetBrains → VSCode migration)", () => {
 			McpOAuthRedirectResolver.isRedirectCompatible(
 				"http://127.0.0.1:48801/mcp-auth/callback/abc123",
-				"vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123",
+				"vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123",
 			).should.be.false()
 		})
 
@@ -199,12 +197,12 @@ describe("McpOAuthRedirectResolver", () => {
 		})
 
 		it("should NOT pass preferred port for non-loopback saved URLs (vscode://)", async () => {
-			const savedUrl = "vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123"
+			const savedUrl = "vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123"
 			let receivedPreferredPort: number | undefined
 
 			const getCallbackUrl: GetCallbackUrlFn = async (path, preferredPort) => {
 				receivedPreferredPort = preferredPort
-				return `vscode://HybridTalentComputing.cline-chinese${path}`
+				return `vscode://AdamPAN.cline-multi${path}`
 			}
 
 			await McpOAuthRedirectResolver.resolve(savedUrl, "/mcp-auth/callback/abc123", getCallbackUrl)
@@ -213,20 +211,20 @@ describe("McpOAuthRedirectResolver", () => {
 		})
 
 		it("should mark registration valid when VSCode URLs match", async () => {
-			const savedUrl = "vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123"
+			const savedUrl = "vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123"
 
 			const getCallbackUrl: GetCallbackUrlFn = async (path, _preferredPort) => {
-				return `vscode://HybridTalentComputing.cline-chinese${path}`
+				return `vscode://AdamPAN.cline-multi${path}`
 			}
 
 			const result = await McpOAuthRedirectResolver.resolve(savedUrl, "/mcp-auth/callback/abc123", getCallbackUrl)
 
-			result.redirectUrl.should.equal("vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123")
+			result.redirectUrl.should.equal("vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123")
 			result.isRegistrationValid.should.be.true()
 		})
 
 		it("should mark registration invalid for VSCode → JetBrains cross-platform migration", async () => {
-			const savedUrl = "vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123"
+			const savedUrl = "vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123"
 
 			// Now running on JetBrains, which uses loopback
 			const getCallbackUrl: GetCallbackUrlFn = async (path, _preferredPort) => {
@@ -244,12 +242,12 @@ describe("McpOAuthRedirectResolver", () => {
 
 			// Now running on VSCode
 			const getCallbackUrl: GetCallbackUrlFn = async (path, _preferredPort) => {
-				return `vscode://HybridTalentComputing.cline-chinese${path}`
+				return `vscode://AdamPAN.cline-multi${path}`
 			}
 
 			const result = await McpOAuthRedirectResolver.resolve(savedUrl, "/mcp-auth/callback/abc123", getCallbackUrl)
 
-			result.redirectUrl.should.equal("vscode://HybridTalentComputing.cline-chinese/mcp-auth/callback/abc123")
+			result.redirectUrl.should.equal("vscode://AdamPAN.cline-multi/mcp-auth/callback/abc123")
 			result.isRegistrationValid.should.be.false()
 		})
 

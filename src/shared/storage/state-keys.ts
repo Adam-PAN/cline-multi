@@ -1,4 +1,4 @@
-import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
+﻿import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
 import {
 	ApiProvider,
 	DEFAULT_API_PROVIDER,
@@ -13,7 +13,6 @@ import { DEFAULT_FOCUS_CHAIN_SETTINGS, FocusChainSettings } from "@shared/FocusC
 import { HistoryItem } from "@shared/HistoryItem"
 import { DEFAULT_MCP_DISPLAY_MODE, McpDisplayMode } from "@shared/McpDisplayMode"
 import { WorkspaceRoot } from "@shared/multi-root/types"
-import { ShengSuanYunModelInfo } from "@shared/proto/cline/models"
 import { GlobalInstructionsFile } from "@shared/remote-config/schema"
 import { Mode } from "@shared/storage/types"
 import { TelemetrySetting } from "@shared/TelemetrySetting"
@@ -72,6 +71,18 @@ const GLOBAL_STATE_FIELDS = {
 	taskHistory: { default: [] as HistoryItem[], isAsync: true },
 	userInfo: { default: undefined as UserInfo | undefined },
 	favoritedModelIds: { default: [] as string[] },
+	apiProfiles: {
+		default: [] as Array<{
+			id: string
+			name: string
+			provider: string
+			apiKey?: string
+			modelId?: string
+			baseUrl?: string
+			extra?: Record<string, unknown>
+		}>,
+	},
+	activeApiProfileId: { default: undefined as string | undefined },
 	mcpMarketplaceEnabled: { default: true as boolean },
 	mcpResponsesCollapsed: { default: false as boolean },
 	terminalReuseEnabled: { default: true as boolean },
@@ -188,8 +199,6 @@ const API_HANDLER_SETTINGS_FIELDS = {
 	planModeNousResearchModelId: { default: undefined as string | undefined },
 	planModeVercelAiGatewayModelId: { default: undefined as string | undefined },
 	planModeVercelAiGatewayModelInfo: { default: undefined as ModelInfo | undefined },
-	planModeShengSuanYunModelId: { default: undefined as string | undefined },
-	planModeShengSuanYunModelInfo: { default: undefined as ShengSuanYunModelInfo | undefined },
 
 	// Act mode configurations
 	actModeApiModelId: { default: undefined as string | undefined },
@@ -235,8 +244,6 @@ const API_HANDLER_SETTINGS_FIELDS = {
 	actModeNousResearchModelId: { default: undefined as string | undefined },
 	actModeVercelAiGatewayModelId: { default: undefined as string | undefined },
 	actModeVercelAiGatewayModelInfo: { default: undefined as ModelInfo | undefined },
-	actModeShengSuanYunModelId: { default: undefined as string | undefined },
-	actModeShengSuanYunModelInfo: { default: undefined as ShengSuanYunModelInfo | undefined },
 
 	// Model-specific settings
 	planModeApiProvider: { default: DEFAULT_API_PROVIDER as ApiProvider },
@@ -351,7 +358,6 @@ const SECRETS_KEYS = [
 	"hicapApiKey",
 	"aihubmixApiKey",
 	"nousResearchApiKey",
-	"shengSuanYunApiKey",
 	"remoteLiteLlmApiKey",
 	"ocaApiKey",
 	"ocaRefreshToken",

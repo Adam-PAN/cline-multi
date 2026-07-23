@@ -22,7 +22,7 @@ export async function updateApiConfigurationPartial(
 ): Promise<Empty> {
 	try {
 		// Validate request
-		if (!request.updateMask || request.updateMask.length === 0) {
+		if (!request.updateMask || request.updateMask.paths.length === 0) {
 			throw new Error("update_mask is required and must contain at least one field")
 		}
 
@@ -36,7 +36,7 @@ export async function updateApiConfigurationPartial(
 
 		// Apply only the fields specified in the mask
 		const updatedConfig = { ...currentConfig }
-		for (const field of request.updateMask) {
+		for (const field of request.updateMask.paths) {
 			;(updatedConfig as Record<string, any>)[field] = (newConfigValues as Record<string, any>)[field]
 		}
 

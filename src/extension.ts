@@ -74,10 +74,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	await cleanupLegacyVSCodeStorage(context)
 
 	// 3. One-time export of VSCode's native storage to shared file-backed stores.
-	// Keep cline-chinese isolated from upstream Cline's ~/.cline/data/.
+	// Keep cline-multi isolated from upstream Cline's ~/.cline/data/.
 	const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 	const storageContext = createStorageContext({
-		clineDir: path.join(os.homedir(), ".cline-chinese"),
+		clineDir: path.join(os.homedir(), ".cline-multi"),
 		workspacePath,
 	})
 	await exportVSCodeStorageToSharedFiles(context, storageContext)
@@ -187,7 +187,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Register size testing commands in development mode
 	if (IS_DEV) {
-		vscode.commands.executeCommand("setContext", "cline-chinese.isDevMode", IS_DEV)
+		vscode.commands.executeCommand("setContext", "cline-multi.isDevMode", IS_DEV)
 		// Use dynamic import to avoid loading the module in production
 		import("./dev/commands/tasks")
 			.then((module) => {

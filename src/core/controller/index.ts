@@ -699,42 +699,6 @@ export class Controller {
 		}
 	}
 
-	async handleShengSuanYunCallback(code: string) {
-		try {
-			const callbackUrl = await HostProvider.get().getCallbackUrl("/ssy")
-			const response = await axios.post("https://api.shengsuanyun.com/auth/keys", {
-				code,
-				callback_url: callbackUrl,
-			})
-
-			const shengSuanYunApiKey = response.data?.data?.api_key
-
-			if (!shengSuanYunApiKey) {
-				HostProvider.window.showMessage({
-					type: ShowMessageType.ERROR,
-					message: "登录胜算云成功，但未获取到 API Key，请前往控制台创建。",
-				})
-				return
-			}
-
-			const currentMode = this.stateManager.getGlobalSettingsKey("mode")
-			const currentApiConfiguration = this.stateManager.getApiConfiguration()
-			const updatedConfig = {
-				...currentApiConfiguration,
-				shengSuanYunApiKey,
-			}
-
-			this.stateManager.setApiConfiguration(updatedConfig)
-
-			await this.postStateToWebview()
-			if (this.task) {
-				this.task.api = buildApiHandler({ ...updatedConfig, ulid: this.task.ulid }, currentMode)
-			}
-		} catch (error) {
-			Logger.error("Error exchanging code for ShengSuanYun API key:", error)
-			throw error
-		}
-	}
 
 	// Read OpenRouter models from disk cache
 	async readOpenRouterModels(): Promise<Record<string, ModelInfo> | undefined> {
@@ -1026,7 +990,7 @@ export class Controller {
 
 	/*
 	It seems that some API messages do not comply with vscode state requirements. Either the Anthropic library is manipulating these values somehow in the backend in a way that's creating cyclic references, or the API returns a function or a Symbol as part of the message content.
-	VSCode docs about state: "The value must be JSON-stringifyable ... value — A value. MUST not contain cyclic references."
+	VSCode docs about state: "The value must be JSON-stringifyable ... value �?A value. MUST not contain cyclic references."
 	For now we'll store the conversation history in memory, and if we need to store in state directly we'd need to do a manual conversion to ensure proper json stringification.
 	*/
 

@@ -118,7 +118,7 @@
 		"resetStateDescription": "这将重置扩展中的所有全局状态和密钥存储。",
 		"resetOnboardingState": "重置引导状态",
 		"aboutVersion": "Cline v{{version}}",
-		"aboutDescription": "一个可以使用您的 CLI 和编辑器的 AI 助手。Cline 可以通过工具逐步处理复杂的软件开发任务，包括创建和编辑文件、探索大型项目、使用浏览器以及执行终端命令（在您授权之后）。",
+		"aboutDescription": "一个可以使用您的 CLI 和编辑器的 AI 助手。Cline 可以通过工具逐步处理复杂的软件开发任务，包括创建和编辑文件、探索大型项目、使用浏览器以及执行终端命令（在您授权之后）。Cline Multi 基于Cline开发，允许您配置多个模型并在工作中热切换，并更好的支持Deepseek、Mimo、Kimi等国产模型。",
 		"communitySupport": "社区与支持",
 		"development": "开发",
 		"resources": "资源",
@@ -287,7 +287,7 @@
 			"inputPricePerMillion": "输入价格 / 百万令牌",
 			"outputPricePerMillion": "输出价格 / 百万令牌",
 			"temperature": "温度",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，与 Claude 模型配合效果最佳。能力较弱的模型可能无法按预期工作。"
+			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。"
 		},
 		"openRouter": {
 			"name": "OpenRouter",
@@ -360,7 +360,7 @@
 			"requestTimeoutDescription": "等待 API 响应的最大超时时间（毫秒）。",
 			"quickstartGuide": "快速入门指南。",
 			"ollamaInstructions": "Ollama 允许您在本地计算机上运行模型。有关如何入门的说明，请参阅其",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，与 Claude 模型配合效果最佳。能力较弱的模型可能无法按预期工作。",
+			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。",
 			"seeQuickstart": "Ollama 允许您在本地计算机上运行模型。有关如何开始使用的说明，请参见他们的快速入门指南。",
 			"modelExample": "例如 llama3.1",
 			"contextLengthExample": "例如 32768"
@@ -375,12 +375,12 @@
 		"together": {
 			"name": "Together",
 			"modelId": "模型 ID",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，与 Claude 模型配合效果最佳。能力较弱的模型可能无法按预期工作。",
+			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。",
 			"modelIdPlaceholder": "输入模型 ID..."
 		},
 		"xai": {
 			"name": "X AI",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，与 Claude 模型配合效果最佳。能力较弱的模型可能无法按预期工作。",
+			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。",
 			"reasoningEffort": "推理力度"
 		},
 		"groq": {
@@ -404,7 +404,7 @@
 		},
 		"nousresearch": {
 			"name": "NousResearch",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，与 Claude 模型配合效果最佳。能力较弱的模型可能无法按预期工作。"
+			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。"
 		},
 		"sambanova": {
 			"name": "SambaNova"

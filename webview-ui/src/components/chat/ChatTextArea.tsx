@@ -5,7 +5,7 @@ import { PlanActMode, TogglePlanActModeRequest } from "@shared/proto/cline/state
 import { type SlashCommand } from "@shared/slashCommands"
 import { Mode } from "@shared/storage/types"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
-import { AtSignIcon, PlusIcon } from "lucide-react"
+import { AtSignIcon, ChevronDownIcon, PlusIcon } from "lucide-react"
 import type React from "react"
 import { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -193,6 +193,47 @@ const ModelButtonContent = styled.div`
 	text-overflow: ellipsis;
 	white-space: nowrap;
 `
+const ModelDropdownMenu = styled.div`
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	margin-bottom: 4px;
+	background: var(--vscode-dropdown-background);
+	border: 1px solid var(--vscode-dropdown-border);
+	border-radius: 4px;
+	min-width: 200px;
+	max-height: 300px;
+	overflow-y: auto;
+	z-index: 100;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+`
+
+const ModelDropdownItem = styled.div<{ isActive?: boolean }>`
+	padding: 6px 12px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 12px;
+	background: ${(props) => (props.isActive ? "var(--vscode-list-activeSelectionBackground)" : "transparent")};
+	color: ${(props) => (props.isActive ? "var(--vscode-list-activeSelectionForeground)" : "var(--vscode-foreground)")};
+	&:hover {
+		background: var(--vscode-list-hoverBackground);
+	}
+`
+
+const ProfileName = styled.span`
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`
+
+const ProfileProvider = styled.span`
+	opacity: 0.6;
+	font-size: 11px;
+	margin-left: 8px;
+`
 
 const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 	(
@@ -223,7 +264,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			remoteWorkflowToggles,
 			remoteConfigSettings,
 			navigateToSettingsModelPicker,
+			navigateToSettings,
 			mcpServers,
+			apiProfiles,
+			activeApiProfileId,
+			applyApiProfile,
 		} = useExtensionState()
 		const { t } = useTranslation("common")
 		const [isTextAreaFocused, setIsTextAreaFocused] = useState(false)
@@ -233,6 +278,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [selectedSlashCommandsIndex, setSelectedSlashCommandsIndex] = useState(0)
 		const [slashCommandsQuery, setSlashCommandsQuery] = useState("")
 		const slashCommandsMenuContainerRef = useRef<HTMLDivElement>(null)
+
+		const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+		const profileDropdownRef = useRef<HTMLDivElement>(null)
 
 		const [thumbnailsHeight, setThumbnailsHeight] = useState(0)
 		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
@@ -327,6 +375,17 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 		}, [showSlashCommandsMenu])
 
+		useEffect(() => {
+			if (!isProfileDropdownOpen) return
+			const handleClickOutside = (e: MouseEvent) => {
+				if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+					setIsProfileDropdownOpen(false)
+				}
+			}
+			document.addEventListener("mousedown", handleClickOutside)
+			return () => document.removeEventListener("mousedown", handleClickOutside)
+		}, [isProfileDropdownOpen])
+
 		const handleMentionSelect = useCallback(
 			(type: ContextMenuOptionType, value?: string) => {
 				if (type === ContextMenuOptionType.NoResults) {
@@ -365,7 +424,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							)
 								.then((results) => {
 									if (myToken !== latestSearchTokenRef.current) {
-										// Stale response — a newer search has been issued.
+										// Stale response �?a newer search has been issued.
 										return
 									}
 									setFileSearchResults((results.results || []) as SearchResult[])
@@ -795,7 +854,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							)
 								.then((results) => {
 									if (myToken !== latestSearchTokenRef.current) {
-										// Stale response — a newer search has been issued.
+										// Stale response �?a newer search has been issued.
 										return
 									}
 									setFileSearchResults((results.results || []) as SearchResult[])
@@ -1091,7 +1150,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		}, [inputValue, handleInputChange, updateHighlights])
 
 		const handleModelButtonClick = () => {
-			navigateToSettingsModelPicker({ targetSection: "api-config" })
+			setIsProfileDropdownOpen((prev) => !prev)
 		}
 
 		// Get model display name
@@ -1601,7 +1660,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 							<ClineRulesToggleModal />
 
-							<ModelContainer>
+							<ModelContainer ref={profileDropdownRef} style={{ position: "relative" }}>
 								<ModelButtonWrapper>
 									<ModelDisplayButton
 										disabled={false}
@@ -1609,9 +1668,52 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										role="button"
 										tabIndex={0}
 										title={t("chat.openApiSettings")}>
-										<ModelButtonContent className="text-xs">{modelDisplayName}</ModelButtonContent>
+										<ModelButtonContent className="text-xs flex items-center gap-1">
+											{modelDisplayName}
+											<ChevronDownIcon size={12} />
+										</ModelButtonContent>
 									</ModelDisplayButton>
 								</ModelButtonWrapper>
+								{isProfileDropdownOpen && (
+									<ModelDropdownMenu>
+										{apiProfiles.length === 0 ? (
+											<ModelDropdownItem
+												onClick={() => {
+													navigateToSettings("api-config")
+													setIsProfileDropdownOpen(false)
+												}}>
+												<ProfileName style={{ opacity: 0.6 }}>暂无预设，前往设置添加</ProfileName>
+											</ModelDropdownItem>
+										) : (
+											apiProfiles.map((profile) => (
+												<ModelDropdownItem
+													isActive={profile.id === activeApiProfileId}
+													key={profile.id}
+													onClick={() => {
+														applyApiProfile(profile.id)
+														setIsProfileDropdownOpen(false)
+													}}>
+													<ProfileName>{profile.modelId || profile.name}</ProfileName>
+													<ProfileProvider>{profile.provider}</ProfileProvider>
+												</ModelDropdownItem>
+											))
+										)}
+										<ModelDropdownItem
+											onClick={() => {
+												navigateToSettings("api-config")
+												setIsProfileDropdownOpen(false)
+											}}
+											style={{
+												borderTop: "1px solid var(--vscode-dropdown-border)",
+												marginTop: 2,
+												paddingTop: 8,
+											}}>
+											<ProfileName className="text-xs" style={{ opacity: 0.7 }}>
+												管理预设...
+											</ProfileName>
+										</ModelDropdownItem>
+									</ModelDropdownMenu>
+								)}
 							</ModelContainer>
 						</ButtonGroup>
 					</div>

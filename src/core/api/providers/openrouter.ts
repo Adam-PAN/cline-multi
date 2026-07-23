@@ -44,8 +44,8 @@ export class OpenRouterHandler implements ApiHandler {
 					baseURL: "https://openrouter.ai/api/v1",
 					apiKey: this.options.openRouterApiKey,
 					defaultHeaders: {
-						"HTTP-Referer": "https://github.com/HybridTalentComputing/cline-chinese", // Optional, for including your app on openrouter.ai rankings.
-						"X-Title": "Cline Chinese", // Optional. Shows in rankings on openrouter.ai.
+						"HTTP-Referer": "https://github.com/Adam-PAN/cline-multi", // Optional, for including your app on openrouter.ai rankings.
+						"X-Title": "Cline Multi", // Optional. Shows in rankings on openrouter.ai.
 					},
 				})
 			} catch (error: any) {

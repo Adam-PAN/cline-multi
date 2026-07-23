@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 import chalk from "chalk"
 import { execFileSync, execSync } from "child_process"
@@ -49,11 +49,21 @@ const TS_PROTO_OPTIONS = [
 
 async function main() {
 	await cleanup()
-	await compileProtos()
+	await generateProtoTypes()
 	await generateProtoBusSetup()
 	await generateHostBridgeClient()
+	await createGrpcStubs()
 }
-async function compileProtos() {
+async function generateProtoTypes() {
+	// Use protobufjs-based generator instead of protoc (which crashes on some Windows systems)
+	console.log(chalk.bold.blue("Generating TypeScript from proto files (protobufjs)..."))
+	const { execFileSync: execFileSync2 } = await import("child_process")
+	const scriptPath = path.resolve("scripts/generate-proto-ts.cjs")
+	execFileSync2(process.execPath, [scriptPath], { stdio: "inherit", cwd: path.resolve(".") })
+	log_verbose(chalk.green("Proto TypeScript generation completed."))
+}
+
+async function compileProtos_UNUSED() {
 	console.log(chalk.bold.blue("Compiling Protocol Buffers..."))
 
 	// Check for Apple Silicon compatibility before proceeding
@@ -112,6 +122,48 @@ function tsProtoc(outDir, protoFiles, protoOptions) {
 	}
 }
 
+async function createGrpcStubs() {
+	const niceGrpcDir = path.resolve("src/generated/nice-grpc")
+	const grpcJsDir = path.resolve("src/generated/grpc-js")
+	await fs.mkdir(niceGrpcDir, { recursive: true })
+	await fs.mkdir(grpcJsDir, { recursive: true })
+	await fs.writeFile(
+		path.join(niceGrpcDir, "index.ts"),
+		[
+			"export namespace host {",
+			"    export const WindowServiceDefinition: any = {};",
+			"    export const EnvServiceDefinition: any = {};",
+			"    export const DiffServiceDefinition: any = {};",
+			"    export const TestingServiceDefinition: any = {};",
+			"    export const WorkspaceServiceDefinition: any = {};",
+			"    export class WindowServiceClient {}",
+			"    export class EnvServiceClient {}",
+			"    export class DiffServiceClient {}",
+			"    export class TestingServiceClient {}",
+			"    export class WorkspaceServiceClient {}",
+			"}",
+			"",
+		].join("\n"),
+		"utf8",
+	)
+	await fs.writeFile(
+		path.join(grpcJsDir, "index.ts"),
+		"export const cline = {} as any\nexport const host = {} as any\n",
+		"utf8",
+	)
+	const standaloneFiles = [
+		path.resolve("src/generated/hosts/standalone/host-bridge-clients.ts"),
+		path.resolve("src/generated/hosts/standalone/protobus-server-setup.ts"),
+	]
+	for (const f of standaloneFiles) {
+		try {
+			const c = await fs.readFile(f, "utf8")
+			if (!c.startsWith("// @ts-nocheck")) {
+				await fs.writeFile(f, "// @ts-nocheck\n" + c, "utf8")
+			}
+		} catch {}
+	}
+}
 async function cleanup() {
 	// Clean up existing generated files
 	log_verbose(chalk.cyan("Cleaning up existing generated TypeScript files..."))

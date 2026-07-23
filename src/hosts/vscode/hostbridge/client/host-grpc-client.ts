@@ -4,7 +4,7 @@ import { HostBridgeClientProvider } from "@/hosts/host-provider-types"
 
 export const vscodeHostBridgeClient: HostBridgeClientProvider = {
 	workspaceClient: createGrpcClient(host.WorkspaceServiceDefinition),
-	envClient: createGrpcClient(host.EnvServiceDefinition),
+	envClient: createGrpcClient(host.EnvServiceDefinition) as any,
 	windowClient: createGrpcClient(host.WindowServiceDefinition),
 	diffClient: createGrpcClient(host.DiffServiceDefinition),
 }

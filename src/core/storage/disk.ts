@@ -52,7 +52,7 @@ export const GlobalFileNames = {
 	groqModels: "groq_models.json",
 	basetenModels: "baseten_models.json",
 	hicapModels: "hicap_models.json",
-	mcpSettings: "cline_chinese_mcp_settings.json",
+	mcpSettings: "cline_multi_mcp_settings.json",
 	clineRules: ".clinerules",
 	workflows: ".clinerules/workflows",
 	hooksDir: ".clinerules/hooks",
@@ -65,7 +65,6 @@ export const GlobalFileNames = {
 	windsurfRules: ".windsurfrules",
 	agentsRulesFile: "AGENTS.md",
 	taskMetadata: "task_metadata.json",
-	shengSuanYunModels: "shengsuananyun_models.json",
 	mcpMarketplaceCatalog: "mcp_marketplace_catalog.json",
 	remoteConfig: (orgId: string) => `remote_config_${orgId}.json`,
 }

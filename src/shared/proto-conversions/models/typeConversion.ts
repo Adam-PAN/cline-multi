@@ -154,8 +154,9 @@ export function fromProtobufOcaModelInfo(protoInfo: ProtoOcaModelInfo): OcaModel
 /**
  * Convert a record of protobuf models to application models
  */
-export function fromProtobufModels(protoModels: Record<string, OpenRouterModelInfo>): Record<string, ModelInfo> {
+export function fromProtobufModels(protoModels: Record<string, OpenRouterModelInfo> | undefined): Record<string, ModelInfo> {
 	const result: Record<string, ModelInfo> = {}
+	if (!protoModels) return result
 	for (const [key, value] of Object.entries(protoModels)) {
 		result[key] = fromProtobufModelInfo(value)
 	}

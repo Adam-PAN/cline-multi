@@ -1,5 +1,5 @@
 {
-	"cline.description": "您的 IDE 中的自主编码助手，能够创建/编辑文件、运行命令、使用浏览器等，每一步都会征得您的许可。",
+	"cline.description": "支持多模型热切换的 AI 编程助手，基于 Cline 构建，深度适配 DeepSeek、Mimo、Kimi 等国产模型。",
 	"cline.walkthrough.title": "认识 Cline，您的新编程伙伴",
 	"cline.walkthrough.description": "Cline 的编码方式像开发者，因为它像开发者一样思考。这里有 5 种方式让它开始工作：",
 	"cline.walkthrough.step1.title": "从目标开始，而不仅仅是提示词",
