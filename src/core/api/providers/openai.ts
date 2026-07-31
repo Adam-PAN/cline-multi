@@ -141,7 +141,12 @@ export class OpenAiHandler implements ApiHandler {
 			reasoning_effort: reasoningEffort,
 			stream: true,
 			stream_options: { include_usage: true },
-			...getOpenAIToolParams(tools),
+			// Force tool usage for reasoning models to prevent text-only/empty responses
+			...(tools?.length
+				? isReasoningModelFamily || this.options.openAiModelInfo?.supportsReasoning
+					? { tools, tool_choice: "required" as const, parallel_tool_calls: false }
+					: getOpenAIToolParams(tools)
+				: { tools: undefined }),
 		})
 
 		const toolCallProcessor = new ToolCallProcessor()
