@@ -1,4 +1,4 @@
-import { setTimeout as setTimeoutPromise } from "node:timers/promises"
+﻿import { setTimeout as setTimeoutPromise } from "node:timers/promises"
 import { ApiHandler, ApiProviderInfo, buildApiHandler } from "@core/api"
 import { ApiStream } from "@core/api/transform/stream"
 import { AssistantMessageContent, parseAssistantMessageV2, ToolUse } from "@core/assistant-message"
@@ -571,7 +571,7 @@ export class Task {
 					// awaits remoteWorkspaceDetectionPromise before the first flush is scheduled.
 					// If it does fire, we fall back to the local cadence (safe default).
 					Logger.warn(
-						`[Task ${taskId}] getDelayMs called before remote workspace detection settled — using local cadence as fallback`,
+						`[Task ${taskId}] getDelayMs called before remote workspace detection settled 鈥?using local cadence as fallback`,
 					)
 				}
 				return getPresentationCadenceMs(this.isRemoteWorkspaceEnvironment, priority)
@@ -1883,23 +1883,23 @@ export class Task {
 		const preferredLanguageRaw = this.stateManager.getGlobalSettingsKey("preferredLanguage")
 		const preferredLanguage = getLanguageKey(preferredLanguageRaw as LanguageDisplay)
 		const languageInstructionMap: Record<string, string> = {
-			"zh-CN": "Simplified Chinese (简体中文)",
-			"zh-TW": "Traditional Chinese (繁體中文)",
-			ja: "Japanese (日本語)",
-			ko: "Korean (한국어)",
-			fr: "French (Français)",
+			"zh-CN": "Simplified Chinese (绠€浣撲腑鏂?",
+			"zh-TW": "Traditional Chinese (绻侀珨涓枃)",
+			ja: "Japanese (鏃ユ湰瑾?",
+			ko: "Korean (頃滉淡鞏?",
+			fr: "French (Fran莽ais)",
 			de: "German (Deutsch)",
-			es: "Spanish (Español)",
-			"pt-BR": "Brazilian Portuguese (Português Brasileiro)",
-			"pt-PT": "Portuguese (Português)",
+			es: "Spanish (Espa帽ol)",
+			"pt-BR": "Brazilian Portuguese (Portugu锚s Brasileiro)",
+			"pt-PT": "Portuguese (Portugu锚s)",
 			it: "Italian (Italiano)",
-			ru: "Russian (Русский)",
-			ar: "Arabic (العربية)",
-			hi: "Hindi (हिन्दी)",
-			cs: "Czech (Čeština)",
+			ru: "Russian (袪褍褋褋泻懈泄)",
+			ar: "Arabic (丕賱毓乇亘賷丞)",
+			hi: "Hindi (啶灌た啶ㄠ啶︵)",
+			cs: "Czech (膶e拧tina)",
 			hu: "Hungarian (Magyar)",
 			pl: "Polish (Polski)",
-			tr: "Turkish (Türkçe)",
+			tr: "Turkish (T眉rk莽e)",
 			en: "English",
 		}
 		const preferredLanguageInstructions =
@@ -2424,7 +2424,7 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 				"mistake_limit_reached",
 				this.api.getModel().id.includes("claude")
 					? `This may indicate a failure in Cline's thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
-					: "Cline uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 4.5 Sonnet for its advanced agentic coding capabilities.",
+					: "Cline Multi 检测到当前模型出现了连续错误。请尝试将任务拆分为更小的步骤，或检查模型配置。",
 			)
 			if (response === "messageResponse") {
 				// Display the user's message in the chat UI
@@ -3119,7 +3119,7 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 			}
 
 			// Stored the assistant API response immediately after the stream finishes in the same turn
-			// Check if the stream produced any content — either text or native tool calls.
+			// Check if the stream produced any content 鈥?either text or native tool calls.
 			// toolUseHandler may have accumulated tool_use blocks even when useNativeToolCalls is false
 			// (e.g., from Claude Code provider when the model returns native tool_use blocks).
 			const hasAccumulatedToolCalls = toolUseHandler.getAllFinalizedToolUses().length > 0

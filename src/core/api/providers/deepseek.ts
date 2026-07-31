@@ -98,7 +98,12 @@ export class DeepSeekHandler implements ApiHandler {
 			stream_options: { include_usage: true },
 			// Only set temperature for non-thinking models
 			...(isDeepSeekThinkingModel ? {} : { temperature: 0 }),
-			...getOpenAIToolParams(tools),
+			// Force tool usage for V4 thinking models to prevent text-only responses
+			...(tools?.length
+				? isDeepSeekThinkingModel
+					? { tools, tool_choice: "required" as const, parallel_tool_calls: false }
+					: getOpenAIToolParams(tools)
+				: { tools: undefined }),
 		})
 
 		const toolCallProcessor = new ToolCallProcessor()

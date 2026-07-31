@@ -1,4 +1,4 @@
-ï»¿import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
+import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
 import {
 	ApiProvider,
 	DEFAULT_API_PROVIDER,
@@ -272,7 +272,7 @@ const USER_SETTINGS_FIELDS = {
 	shellIntegrationTimeout: { default: 4000 as number },
 	defaultTerminalProfile: { default: "default" as string },
 	terminalOutputLineLimit: { default: 500 as number },
-	maxConsecutiveMistakes: { default: 3 as number },
+	maxConsecutiveMistakes: { default: 5 as number },
 	strictPlanModeEnabled: { default: false as boolean },
 	hooksEnabled: { default: true as boolean },
 	yoloModeToggled: { default: false as boolean },
@@ -281,7 +281,7 @@ const USER_SETTINGS_FIELDS = {
 	subagentsEnabled: { default: false as boolean },
 	clineWebToolsEnabled: { default: true as boolean },
 	worktreesEnabled: { default: false as boolean },
-	preferredLanguage: { default: "Simplified Chinese - ç®€ä½“ä¸­æ–‡" as string },
+	preferredLanguage: { default: "Simplified Chinese - ¼òÌåÖÐÎÄ" as string },
 	mode: { default: "act" as Mode },
 	focusChainSettings: { default: DEFAULT_FOCUS_CHAIN_SETTINGS as FocusChainSettings },
 	customPrompt: { default: undefined as "compact" | undefined },
