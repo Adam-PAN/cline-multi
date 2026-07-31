@@ -108,6 +108,7 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 	const { selectedProvider } = normalizeApiConfiguration(apiConfiguration, currentMode)
 	const [dragIdx, setDragIdx] = useState<number | null>(null)
 	const [overIdx, setOverIdx] = useState<number | null>(null)
+	const [savedToast, setSavedToast] = useState(false)
 
 	const getProviderDisplayName = (pv: string) => PROVIDERS.list.find((p: any) => p.value === pv)?.label || pv
 
@@ -119,22 +120,69 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 	const getCurrentApiKey = () => {
 		if (!apiConfiguration) return ""
 		const cfg = apiConfiguration as Record<string, any>
-		return cfg[`${selectedProvider}ApiKey`] || cfg.apiKey || ""
+		const providerApiKeyField: Record<string, string> = {
+			anthropic: "apiKey",
+			"claude-code": "apiKey",
+			openrouter: "openRouterApiKey",
+			bedrock: "awsBedrockApiKey",
+			openai: "openAiApiKey",
+			ollama: "ollamaApiKey",
+			lmstudio: "lmStudioApiKey",
+			gemini: "geminiApiKey",
+			"openai-native": "openAiNativeApiKey",
+			"openai-codex": "openAiCodexApiKey",
+			deepseek: "deepSeekApiKey",
+			qwen: "qwenApiKey",
+			"qwen-code": "qwenCodeApiKey",
+			doubao: "doubaoApiKey",
+			mistral: "mistralApiKey",
+			litellm: "liteLlmApiKey",
+			moonshot: "moonshotApiKey",
+			nebius: "nebiusApiKey",
+			fireworks: "fireworksApiKey",
+			asksage: "asksageApiKey",
+			xai: "xaiApiKey",
+			sambanova: "sambanovaApiKey",
+			cerebras: "cerebrasApiKey",
+			sapaicore: "sapAiCoreApiKey",
+			groq: "groqApiKey",
+			huggingface: "huggingFaceApiKey",
+			"huawei-cloud-maas": "huaweiCloudMaasApiKey",
+			dify: "difyApiKey",
+			baseten: "basetenApiKey",
+			"vercel-ai-gateway": "vercelAiGatewayApiKey",
+			zai: "zaiApiKey",
+			minimax: "minimaxApiKey",
+			hicap: "hicapApiKey",
+			aihubmix: "aihubmixApiKey",
+			requesty: "requestyApiKey",
+			together: "togetherApiKey",
+			nousResearch: "nousResearchApiKey",
+			cline: "clineApiKey",
+			"vscode-lm": "",
+			wandb: "wandbApiKey",
+		}
+		const field = providerApiKeyField[selectedProvider]
+		return (field && cfg[field]) || cfg.apiKey || ""
 	}
 
 	const getCurrentBaseUrl = () => {
 		if (!apiConfiguration) return ""
 		const cfg = apiConfiguration as Record<string, any>
-		const keys = [`${selectedProvider}BaseUrl`, `${selectedProvider}Endpoint`, `${selectedProvider}ApiUrl`]
-		if (selectedProvider === "openai-native" || selectedProvider === "openai") keys.push("openAiBaseUrl")
-		if (selectedProvider === "ollama") keys.push("ollamaBaseUrl")
-		if (selectedProvider === "lmstudio") keys.push("lmStudioBaseUrl")
-		if (selectedProvider === "litellm") keys.push("litellmBaseUrl")
-		if (selectedProvider === "dify") keys.push("difyBaseUrl")
-		for (const k of keys) {
-			if (cfg[k]) return cfg[k]
+		const baseUrlFields: Record<string, string> = {
+			openai: "openAiBaseUrl",
+			ollama: "ollamaBaseUrl",
+			lmstudio: "lmStudioBaseUrl",
+			litellm: "liteLlmBaseUrl",
+			anthropic: "anthropicBaseUrl",
+			"openai-native": "openAiNativeBaseUrl",
+			deepseek: "deepSeekBaseUrl",
+			requesty: "requestyBaseUrl",
+			dify: "difyBaseUrl",
+			gemini: "geminiBaseUrl",
 		}
-		return ""
+		const field = baseUrlFields[selectedProvider]
+		return (field && cfg[field]) || ""
 	}
 
 	const profilePayload = () => ({
@@ -154,6 +202,8 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 				...profilePayload(),
 			})
 		}
+		setSavedToast(true)
+		setTimeout(() => setSavedToast(false), 1500)
 	}
 
 	const handleAdd = () => {
@@ -211,7 +261,7 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 					borderRadius: 4,
 					border: "1px solid var(--vscode-focusBorder)",
 					background: "transparent",
-					color: "var(--vscode-focusBorder)",
+					color: savedToast ? "var(--vscode-testing-iconPassed)" : "var(--vscode-focusBorder)",
 					cursor: "pointer",
 					fontSize: 12,
 					whiteSpace: "nowrap",
@@ -536,6 +586,10 @@ const ApiOptions = ({
 			<style>
 				{`
 				vscode-text-field {
+						display: block !important;
+						width: 100% !important;
+					}
+					vscode-text-field::part(control) {
 						width: 100% !important;
 					}
 					.provider-item-highlight {

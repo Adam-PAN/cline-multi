@@ -2,7 +2,7 @@
 	"name": "cline-multi",
 	"displayName": "Cline Multi",
 	"description": "%cline.description%",
-	"version": "3.86.6",
+	"version": "3.86.7",
 	"icon": "assets/icons/icon.png",
 	"workspaces": [
 		"."
@@ -401,7 +401,7 @@
 		"compile-tests": "node ./scripts/build-tests.js",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"check-types": "npm run protos && npx tsc --noEmit && cd webview-ui && npx tsc --noEmit",
-		"lint": "biome lint --no-errors-on-unmatched --files-ignore-unknown=true --diagnostic-level=error && npm run lint:proto",
+		"lint": "biome lint --no-errors-on-unmatched --files-ignore-unknown=true --diagnostic-level=error",
 		"lint:proto": "bash ./scripts/proto-lint.sh",
 		"format": "biome format --changed --no-errors-on-unmatched --files-ignore-unknown=true --diagnostic-level=error",
 		"format:fix": "biome check --changed --no-errors-on-unmatched --files-ignore-unknown=true --write",

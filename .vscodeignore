@@ -84,3 +84,6 @@ test-results/
 *storybook.log
 storybook-static
 **/StorybookDecorator.tsx
+
+# Exclude archive files
+*.zip

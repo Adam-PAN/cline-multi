@@ -1,4 +1,5 @@
 import { VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useDebouncedInput } from "../utils/useDebouncedInput"
 
@@ -27,6 +28,7 @@ export const ApiKeyField = ({
 }: ApiKeyFieldProps) => {
 	const { t } = useTranslation("settings")
 	const [localValue, setLocalValue] = useDebouncedInput(initialValue, onChange)
+	const [showKey, setShowKey] = useState(false)
 
 	return (
 		<div>
@@ -35,9 +37,16 @@ export const ApiKeyField = ({
 				placeholder={placeholder}
 				required={true}
 				style={{ width: "100%" }}
-				type="password"
+				type={showKey ? "text" : "password"}
 				value={localValue}>
 				<span style={{ fontWeight: 500 }}>{t("commonFields.apiKey", { provider: providerName })}</span>
+				<span
+					className={showKey ? "codicon codicon-eye" : "codicon codicon-eye-closed"}
+					onClick={() => setShowKey(!showKey)}
+					slot="end"
+					style={{ cursor: "pointer", padding: "0 4px", fontSize: 14, opacity: 0.7 }}
+					title={showKey ? "闅愯棌瀵归挜" : "鏄剧ず瀵归挜"}
+				/>
 			</VSCodeTextField>
 			<p
 				style={{

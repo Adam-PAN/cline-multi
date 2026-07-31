@@ -33,6 +33,12 @@ export const DebouncedTextField = ({
 }: DebouncedTextFieldProps) => {
 	const [localValue, setLocalValue] = useDebouncedInput(initialValue, onChange)
 
+	const mergedStyle: React.CSSProperties = {
+		display: "block",
+		width: "100%",
+		...(otherProps.style || {}),
+	}
+
 	return (
 		<VSCodeTextField
 			{...otherProps}
@@ -41,6 +47,7 @@ export const DebouncedTextField = ({
 				const value = e.target.value
 				setLocalValue(value)
 			}}
+			style={mergedStyle}
 			type={type}
 			value={localValue}>
 			{children}

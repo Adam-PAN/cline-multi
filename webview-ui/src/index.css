@@ -69,3 +69,15 @@
 		margin: calc(var(--design-unit) * 1px) 0;
 	}
 }
+
+/* Force vscode-text-field to full width */
+vscode-text-field {
+	display: block !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+}
+vscode-text-field::part(root) {
+	width: 100% !important;
+	max-width: 100% !important;
+}

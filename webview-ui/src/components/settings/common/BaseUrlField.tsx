@@ -41,7 +41,7 @@ export const BaseUrlField = ({
 	}
 
 	return (
-		<div>
+		<div style={{ width: "100%", display: "block" }}>
 			<div className="flex items-center gap-2">
 				<VSCodeCheckbox checked={isEnabled} disabled={disabled} onChange={handleToggle}>
 					{resolvedLabel}
@@ -54,7 +54,7 @@ export const BaseUrlField = ({
 					disabled={disabled}
 					onInput={(e: any) => setLocalValue(e.target.value.trim())}
 					placeholder={placeholder}
-					style={{ width: "100%", marginTop: 3 }}
+					style={{ display: "block", width: "100%", marginTop: 3 }}
 					type="text"
 					value={localValue}
 				/>
