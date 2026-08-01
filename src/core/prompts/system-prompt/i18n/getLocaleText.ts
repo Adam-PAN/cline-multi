@@ -12,5 +12,8 @@ export function getLocaleText<T>(locale: string | undefined, texts: { en: T; "zh
  * Check if the locale is Chinese
  */
 export function isZhCN(locale: string | undefined): boolean {
-	return locale === "zh-CN"
+	// Temporarily disabled: Chinese translations contain mojibake (garbled text)
+	// that causes models to misunderstand tool parameter requirements.
+	// All prompts use English until Chinese strings are properly re-encoded.
+	return false
 }
