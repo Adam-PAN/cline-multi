@@ -1,4 +1,4 @@
-import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
+﻿import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
 import { findLastIndex } from "@shared/array"
 import { DEFAULT_BROWSER_SETTINGS } from "@shared/BrowserSettings"
 import { DEFAULT_PLATFORM, type ExtensionState } from "@shared/ExtensionMessage"
@@ -1047,6 +1047,11 @@ export const ExtensionStateContextProvider: React.FC<{
 			const modelField = providerModelIdField[profile.provider]
 			if (modelField && profile.modelId) {
 				updates[modelField] = profile.modelId
+				// Also set the corresponding planMode field
+				const planField = modelField.replace(/^actMode/, "planMode")
+				if (planField !== modelField) {
+					updates[planField] = profile.modelId
+				}
 			}
 
 			if (profile.baseUrl) {
