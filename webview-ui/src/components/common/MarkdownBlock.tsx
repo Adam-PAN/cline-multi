@@ -108,8 +108,61 @@ const MemoizedMarkdownBlock = memo(
 
 MemoizedMarkdownBlock.displayName = "MemoizedMarkdownBlock"
 
+function preprocessContent(content: string): string {
+	// Detect unfenced code-like patterns and wrap them in markdown code fences
+	// This fixes models (like DeepSeek) that output code without proper backtick fences,
+	// causing rehype-highlight to mangle the output with wrong syntax colors
+	const codeLikePatterns = [
+		/<content>[\s\S]*?<\/content>/,
+		/<replace>[\s\S]*?<\/replace>/,
+		/<path>[\s\S]*?<\/path>/,
+		/<command>[\s\S]*?<\/command>/,
+		/<instructions>[\s\S]*?<\/instructions>/,
+	]
+
+	for (const pattern of codeLikePatterns) {
+		if (pattern.test(content)) {
+			// Wrap the entire content in a code fence if it contains unfenced tool call patterns
+			// Only if it doesn't already have code fences
+			const hasCodeFences = /```[\s\S]*?```/.test(content)
+			if (!hasCodeFences) {
+				return "```\n" + content + "\n```"
+			}
+		}
+	}
+
+	// Also detect multi-line code-like patterns (lines with JS code but no fences)
+	const lines = content.split("\n")
+	let codeLineCount = 0
+	let totalLines = 0
+	for (const line of lines) {
+		const trimmed = line.trim()
+		if (!trimmed) continue
+		totalLines++
+		if (
+			/^\s*(\/\/|const |let |var |function |return |if\s*\(|for\s*\(|while\s*\(|\.replace\(|\.forEach\(|=>\s*{)/.test(
+				trimmed,
+			) ||
+			/^<\w+>/.test(trimmed)
+		) {
+			codeLineCount++
+		}
+	}
+
+	// If more than 60% of non-empty lines look like code, wrap in fences
+	if (totalLines > 3 && codeLineCount / totalLines > 0.6) {
+		const hasCodeFences = /```[\s\S]*?```/.test(content)
+		if (!hasCodeFences) {
+			return "```\n" + content + "\n```"
+		}
+	}
+
+	return content
+}
+
 const MemoizedMarkdown = memo(({ content, id }: { content: string; id: string }) => {
-	const blocks = useMemo(() => parseMarkdownIntoBlocks(content), [content])
+	const preprocessed = useMemo(() => preprocessContent(content), [content])
+	const blocks = useMemo(() => parseMarkdownIntoBlocks(preprocessed), [preprocessed])
 	return blocks?.map((block, index) => <MemoizedMarkdownBlock content={block} key={`${id}-block_${index}`} />)
 })
 
