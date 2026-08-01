@@ -16,6 +16,7 @@ interface DeepSeekHandlerOptions extends CommonApiHandlerOptions {
 	deepSeekApiKey?: string
 	apiModelId?: string
 	deepSeekModelInfo?: ModelInfo
+	thinkingBudgetTokens?: number
 }
 
 export class DeepSeekHandler implements ApiHandler {
@@ -98,6 +99,10 @@ export class DeepSeekHandler implements ApiHandler {
 			stream_options: { include_usage: true },
 			// Only set temperature for non-thinking models
 			...(isDeepSeekThinkingModel ? {} : { temperature: 0 }),
+			// Limit thinking tokens to reduce verbose reasoning output
+			...(isDeepSeekThinkingModel && this.options.thinkingBudgetTokens
+				? { thinking_budget: this.options.thinkingBudgetTokens }
+				: {}),
 			// Force tool usage for V4 thinking models to prevent text-only responses
 			...(tools?.length
 				? isDeepSeekThinkingModel

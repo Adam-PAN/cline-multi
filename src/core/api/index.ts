@@ -200,6 +200,8 @@ function createHandlerForProvider(
 				deepSeekApiKey: options.deepSeekApiKey,
 				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
 				deepSeekModelInfo: mode === "plan" ? options.planModeDeepSeekModelInfo : options.actModeDeepSeekModelInfo,
+				thinkingBudgetTokens:
+					mode === "plan" ? options.planModeThinkingBudgetTokens : options.actModeThinkingBudgetTokens,
 			})
 		case "requesty":
 			return new RequestyHandler({
