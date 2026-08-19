@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.86.11]
+## [3.87.0]
 
 ### Added
 
@@ -119,3 +119,4 @@
 - Wire up remote `globalSkills` from enterprise remote config with full UI, toggle support, and system prompt integration — enterprise-managed skills now appear under a dedicated "Enterprise Skills" section and support `alwaysEnabled` enforcement
 - Onboarding flow now uses dynamically fetched recommended models instead of a hardcoded list, with a fallback to the welcome view on failure
 - Add dedicated "Quota Exceeded" error message in the chat error UI when Cline account spend caps are hit
+
