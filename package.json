@@ -2,7 +2,7 @@
 	"name": "cline-multi",
 	"displayName": "Cline Multi",
 	"description": "%cline.description%",
-	"version": "3.86.7",
+	"version": "3.86.11",
 	"icon": "assets/icons/icon.png",
 	"workspaces": [
 		"."

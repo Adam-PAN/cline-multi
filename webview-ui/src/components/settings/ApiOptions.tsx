@@ -7,7 +7,7 @@ import { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from
 import { useTranslation } from "react-i18next"
 import { useInterval } from "react-use"
 import styled from "styled-components"
-import { normalizeApiConfiguration } from "@/components/settings/utils/providerUtils"
+import { getModeSpecificFields, normalizeApiConfiguration } from "@/components/settings/utils/providerUtils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { PLATFORM_CONFIG, PlatformType } from "@/config/platform.config"
 import { useExtensionState } from "@/context/ExtensionStateContext"
@@ -118,7 +118,9 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 	}
 
 	const getCurrentApiKey = () => {
-		if (!apiConfiguration) return ""
+		if (!apiConfiguration) {
+			return ""
+		}
 		const cfg = apiConfiguration as Record<string, any>
 		const providerApiKeyField: Record<string, string> = {
 			anthropic: "apiKey",
@@ -167,7 +169,9 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 	}
 
 	const getCurrentBaseUrl = () => {
-		if (!apiConfiguration) return ""
+		if (!apiConfiguration) {
+			return ""
+		}
 		const cfg = apiConfiguration as Record<string, any>
 		const baseUrlFields: Record<string, string> = {
 			openai: "openAiBaseUrl",
@@ -185,12 +189,43 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 		return (field && cfg[field]) || ""
 	}
 
-	const profilePayload = () => ({
-		provider: selectedProvider,
-		apiKey: getCurrentApiKey(),
-		modelId: getCurrentModelId(),
-		baseUrl: getCurrentBaseUrl(),
-	})
+	const getCurrentModelInfo = () => {
+		if (!apiConfiguration) {
+			return undefined
+		}
+		const fields = getModeSpecificFields(apiConfiguration, currentMode)
+		const modelInfoMap: Record<string, any> = {
+			openai: fields.openAiModelInfo,
+			deepseek: fields.deepSeekModelInfo,
+			openrouter: fields.openRouterModelInfo,
+			cline: fields.clineModelInfo,
+			requesty: fields.requestyModelInfo,
+			groq: fields.groqModelInfo,
+			baseten: fields.basetenModelInfo,
+			huggingface: fields.huggingFaceModelInfo,
+			"huawei-cloud-maas": fields.huaweiCloudMaasModelInfo,
+			litellm: fields.liteLlmModelInfo,
+			aihubmix: fields.aihubmixModelInfo,
+			hicap: fields.hicapModelInfo,
+			"vercel-ai-gateway": fields.vercelAiGatewayModelInfo,
+			oca: fields.ocaModelInfo,
+		}
+		return modelInfoMap[selectedProvider]
+	}
+
+	const profilePayload = () => {
+		const modelInfo = getCurrentModelInfo()
+		const payload: Record<string, any> = {
+			provider: selectedProvider,
+			apiKey: getCurrentApiKey(),
+			modelId: getCurrentModelId(),
+			baseUrl: getCurrentBaseUrl(),
+		}
+		if (modelInfo) {
+			payload.extra = { profileModelInfo: modelInfo }
+		}
+		return payload
+	}
 
 	const handleSave = () => {
 		if (activeApiProfileId) {
@@ -232,7 +267,9 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 	}
 	const handleDrop = (e: React.DragEvent, i: number) => {
 		e.preventDefault()
-		if (dragIdx !== null && dragIdx !== i) reorderApiProfiles(dragIdx, i)
+		if (dragIdx !== null && dragIdx !== i) {
+			reorderApiProfiles(dragIdx, i)
+		}
 		setDragIdx(null)
 		setOverIdx(null)
 	}
@@ -273,7 +310,9 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 	}
 
 	// Cards grid
-	if (!showCards) return null
+	if (!showCards) {
+		return null
+	}
 	return (
 		<div style={{ marginBottom: 4 }}>
 			<div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>

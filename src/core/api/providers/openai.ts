@@ -34,8 +34,12 @@ export class OpenAiHandler implements ApiHandler {
 
 	private getAzureAudienceScope(baseUrl?: string): string {
 		const url = baseUrl?.toLowerCase() ?? ""
-		if (url.includes("azure.us")) return "https://cognitiveservices.azure.us/.default"
-		if (url.includes("azure.com")) return "https://cognitiveservices.azure.com/.default"
+		if (url.includes("azure.us")) {
+			return "https://cognitiveservices.azure.us/.default"
+		}
+		if (url.includes("azure.com")) {
+			return "https://cognitiveservices.azure.com/.default"
+		}
 		return "https://cognitiveservices.azure.com/.default"
 	}
 
@@ -144,7 +148,7 @@ export class OpenAiHandler implements ApiHandler {
 			// Force tool usage for reasoning models to prevent text-only/empty responses
 			...(tools?.length
 				? isReasoningModelFamily || this.options.openAiModelInfo?.supportsReasoning
-					? { tools, tool_choice: "required" as const, parallel_tool_calls: false }
+					? { tools, tool_choice: "auto" as const, parallel_tool_calls: false }
 					: getOpenAIToolParams(tools)
 				: { tools: undefined }),
 		})

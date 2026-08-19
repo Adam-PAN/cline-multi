@@ -91,6 +91,38 @@ export const DeepSeekProvider = ({ showModelOptions, isPopup, currentMode }: Dee
 							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.maxOutputTokens")}</span>
 						</DebouncedTextField>
 					</div>
+
+					<div style={{ display: "flex", gap: 10, marginTop: "5px" }}>
+						<DebouncedTextField
+							initialValue={selectedModelInfo.inputPrice?.toString() ?? ""}
+							onChange={(value) => {
+								const modelInfo = deepSeekModelInfo ? { ...deepSeekModelInfo } : { ...selectedModelInfo }
+								modelInfo.inputPrice = value ? Number(value) : undefined
+								handleModeFieldChange(
+									{ plan: "planModeDeepSeekModelInfo", act: "actModeDeepSeekModelInfo" },
+									modelInfo,
+									currentMode,
+								)
+							}}
+							style={{ flex: 1 }}>
+							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.inputPricePerMillion")}</span>
+						</DebouncedTextField>
+
+						<DebouncedTextField
+							initialValue={selectedModelInfo.outputPrice?.toString() ?? ""}
+							onChange={(value) => {
+								const modelInfo = deepSeekModelInfo ? { ...deepSeekModelInfo } : { ...selectedModelInfo }
+								modelInfo.outputPrice = value ? Number(value) : undefined
+								handleModeFieldChange(
+									{ plan: "planModeDeepSeekModelInfo", act: "actModeDeepSeekModelInfo" },
+									modelInfo,
+									currentMode,
+								)
+							}}
+							style={{ flex: 1 }}>
+							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.outputPricePerMillion")}</span>
+						</DebouncedTextField>
+					</div>
 				</>
 			)}
 		</div>

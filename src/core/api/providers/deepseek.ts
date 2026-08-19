@@ -106,16 +106,20 @@ export class DeepSeekHandler implements ApiHandler {
 			// Force tool usage for V4 thinking models to prevent text-only responses
 			...(tools?.length
 				? isDeepSeekThinkingModel
-					? { tools, tool_choice: "required" as const, parallel_tool_calls: false }
+					? { tools, tool_choice: "auto" as const, parallel_tool_calls: false }
 					: getOpenAIToolParams(tools)
 				: { tools: undefined }),
 		})
 
 		const toolCallProcessor = new ToolCallProcessor()
 
+		let hasContent = false
+		let hasToolCalls = false
+
 		for await (const chunk of stream) {
 			const delta = chunk.choices?.[0]?.delta
 			if (delta?.content) {
+				hasContent = true
 				yield {
 					type: "text",
 					text: delta.content,
@@ -123,6 +127,7 @@ export class DeepSeekHandler implements ApiHandler {
 			}
 
 			if (delta?.tool_calls) {
+				hasToolCalls = true
 				yield* toolCallProcessor.processToolCallDeltas(delta.tool_calls)
 			}
 
@@ -135,6 +140,13 @@ export class DeepSeekHandler implements ApiHandler {
 
 			if (chunk.usage) {
 				yield* this.yieldUsage(model.info, chunk.usage)
+			}
+		}
+
+		if (!hasContent && !hasToolCalls) {
+			yield {
+				type: "text",
+				text: "No textual response from model.",
 			}
 		}
 	}

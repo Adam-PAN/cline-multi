@@ -1,4 +1,4 @@
-﻿import { setTimeout as setTimeoutPromise } from "node:timers/promises"
+import { setTimeout as setTimeoutPromise } from "node:timers/promises"
 import { ApiHandler, ApiProviderInfo, buildApiHandler } from "@core/api"
 import { ApiStream } from "@core/api/transform/stream"
 import { AssistantMessageContent, parseAssistantMessageV2, ToolUse } from "@core/assistant-message"
@@ -3123,7 +3123,16 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 			// toolUseHandler may have accumulated tool_use blocks even when useNativeToolCalls is false
 			// (e.g., from Claude Code provider when the model returns native tool_use blocks).
 			const hasAccumulatedToolCalls = toolUseHandler.getAllFinalizedToolUses().length > 0
-			const assistantHasContent = assistantMessage.length > 0 || this.useNativeToolCalls || hasAccumulatedToolCalls
+
+			if (assistantMessage.length === 0) {
+				const reasoningOnly = reasonsHandler.getCurrentReasoning()
+				if (reasoningOnly?.thinking) {
+					assistantMessage = reasoningOnly.thinking
+				}
+			}
+			const hasReasoning = !!reasonsHandler.getCurrentReasoning()?.thinking
+			const assistantHasContent =
+				assistantMessage.length > 0 || this.useNativeToolCalls || hasAccumulatedToolCalls || hasReasoning
 			if (assistantHasContent) {
 				telemetryService.captureConversationTurnEvent(
 					this.ulid,

@@ -1,4 +1,4 @@
-﻿import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
+import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
 import { findLastIndex } from "@shared/array"
 import { DEFAULT_BROWSER_SETTINGS } from "@shared/BrowserSettings"
 import { DEFAULT_PLATFORM, type ExtensionState } from "@shared/ExtensionMessage"
@@ -833,7 +833,7 @@ export const ExtensionStateContextProvider: React.FC<{
 		setApiProfiles(reorderProfiles(fromIndex, toIndex))
 	}, [])
 
-	const clearActiveProfile = useCallback(() => {
+	const _clearActiveProfile = useCallback(() => {
 		setActiveProfileId(undefined)
 		setActiveApiProfileIdState(undefined)
 	}, [])
@@ -841,7 +841,9 @@ export const ExtensionStateContextProvider: React.FC<{
 	const applyApiProfile = useCallback(
 		async (profileId: string) => {
 			const profile = loadProfiles().find((p) => p.id === profileId)
-			if (!profile) return
+			if (!profile) {
+				return
+			}
 
 			setActiveProfileId(profileId)
 			setActiveApiProfileIdState(profileId)
@@ -1035,9 +1037,15 @@ export const ExtensionStateContextProvider: React.FC<{
 				"geminiBaseUrl",
 			]
 
-			for (const f of allApiKeyFields) updates[f] = ""
-			for (const f of allModelIdFields) updates[f] = ""
-			for (const f of allBaseUrlFields) updates[f] = ""
+			for (const f of allApiKeyFields) {
+				updates[f] = ""
+			}
+			for (const f of allModelIdFields) {
+				updates[f] = ""
+			}
+			for (const f of allBaseUrlFields) {
+				updates[f] = ""
+			}
 
 			const keyField = providerApiKeyField[profile.provider]
 			if (keyField && profile.apiKey) {
@@ -1065,11 +1073,40 @@ export const ExtensionStateContextProvider: React.FC<{
 					deepseek: "deepSeekBaseUrl",
 				}
 				const bf = baseUrlFields[profile.provider]
-				if (bf) updates[bf] = profile.baseUrl
+				if (bf) {
+					updates[bf] = profile.baseUrl
+				}
 			}
 
 			if (profile.extra) {
-				Object.assign(updates, profile.extra)
+				const { profileModelInfo: _, ...restExtra } = profile.extra as any
+				Object.assign(updates, restExtra)
+			}
+
+			// Restore profile-specific modelInfo (prices, etc.)
+			const profileModelInfo = profile.extra?.profileModelInfo
+			if (profileModelInfo) {
+				const providerModelInfoField: Record<string, { plan: string; act: string }> = {
+					openai: { plan: "planModeOpenAiModelInfo", act: "actModeOpenAiModelInfo" },
+					deepseek: { plan: "planModeDeepSeekModelInfo", act: "actModeDeepSeekModelInfo" },
+					openrouter: { plan: "planModeOpenRouterModelInfo", act: "actModeOpenRouterModelInfo" },
+					cline: { plan: "planModeClineModelInfo", act: "actModeClineModelInfo" },
+					requesty: { plan: "planModeRequestyModelInfo", act: "actModeRequestyModelInfo" },
+					groq: { plan: "planModeGroqModelInfo", act: "actModeGroqModelInfo" },
+					baseten: { plan: "planModeBasetenModelInfo", act: "actModeBasetenModelInfo" },
+					huggingface: { plan: "planModeHuggingFaceModelInfo", act: "actModeHuggingFaceModelInfo" },
+					"huawei-cloud-maas": { plan: "planModeHuaweiCloudMaasModelInfo", act: "actModeHuaweiCloudMaasModelInfo" },
+					litellm: { plan: "planModeLiteLlmModelInfo", act: "actModeLiteLlmModelInfo" },
+					aihubmix: { plan: "planModeAihubmixModelInfo", act: "actModeAihubmixModelInfo" },
+					hicap: { plan: "planModeHicapModelInfo", act: "actModeHicapModelInfo" },
+					"vercel-ai-gateway": { plan: "planModeVercelAiGatewayModelInfo", act: "actModeVercelAiGatewayModelInfo" },
+					oca: { plan: "planModeOcaModelInfo", act: "actModeOcaModelInfo" },
+				}
+				const fields = providerModelInfoField[profile.provider]
+				if (fields) {
+					updates[fields.plan] = profileModelInfo
+					updates[fields.act] = profileModelInfo
+				}
 			}
 
 			// Apply via the existing RPC

@@ -1,4 +1,4 @@
-import { Anthropic } from "@anthropic-ai/sdk"
+﻿import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import { ClineAssistantThinkingBlock, ClineStorageMessage } from "@/shared/messages/content"
 
@@ -135,7 +135,7 @@ export function convertToR1Format(messages: Anthropic.Messages.MessageParam[]): 
 			if (message.role === "assistant") {
 				const newMessage: OpenAI.Chat.ChatCompletionAssistantMessageParam = {
 					role: "assistant",
-					content: messageContent as OpenAI.Chat.ChatCompletionAssistantMessageParam["content"],
+					content: (messageContent || "") as OpenAI.Chat.ChatCompletionAssistantMessageParam["content"],
 				}
 				merged.push(newMessage)
 			} else {

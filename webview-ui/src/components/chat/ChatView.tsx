@@ -13,6 +13,7 @@ import { useShowNavbar } from "@/context/PlatformContext"
 import { FileServiceClient, UiServiceClient } from "@/services/grpc-client"
 import { Navbar } from "../menu/Navbar"
 import AutoApproveBar from "./auto-approve-menu/AutoApproveBar"
+import CostBar from "./CostBar"
 // Import utilities and hooks from the new structure
 import {
 	ActionButtons,
@@ -366,6 +367,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				)}
 			</div>
 			<footer className="bg-(--vscode-sidebar-background)" style={{ gridRow: "2" }}>
+				<CostBar messages={messages} />
 				<AutoApproveBar />
 				<ActionButtons
 					chatState={chatState}

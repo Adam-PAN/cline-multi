@@ -121,7 +121,7 @@ export class QwenHandler implements ApiHandler {
 			// Force tool usage for reasoning models to prevent text-only/empty responses
 			...(tools?.length
 				? isReasoningModelFamily || isDeepseekReasoner
-					? { tools, tool_choice: "required" as const, parallel_tool_calls: false }
+					? { tools, tool_choice: "auto" as const, parallel_tool_calls: false }
 					: getOpenAIToolParams(tools)
 				: { tools: undefined }),
 		})

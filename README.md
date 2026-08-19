@@ -1,4 +1,4 @@
-﻿# Cline Multi 🌏
+# Cline Multi 🌏
 
 <p align="center">
   <img src="assets/icons/icon.png" width="128" alt="Cline Multi Icon">
@@ -20,8 +20,10 @@ Cline Multi 基于 [Cline](https://github.com/cline/cline) 构建，是一款支
 
 ### 核心特性
 
-- **多模型热切换** — 保存多个 API 配置预设，在工作中随时切换不同模型
+- **多模型热切换** — 保存多个 API 配置预设，在工作中随时切换不同模型，每个配置独立存储价格
 - **国产模型深度适配** — 针对 DeepSeek、Mimo、Kimi 等国产模型优化提示词，提升中文输入下的表现
+- **友好错误提示** — 模型不存在、内容拦截、服务器错误、超时等场景显示中文友好提示卡片
+- **实时成本监控** — 聊天界面底部实时显示 Token 用量和费用
 - **完整中文支持** — 界面全面中文化，中文 prompt 优化
 - **全功能 AI 助手** — 文件读写、终端命令、浏览器操作、MCP 服务器等完整能力
 
@@ -53,13 +55,13 @@ Cline Multi 基于 [Cline](https://github.com/cline/cline) 构建，是一款支
 
 | Provider | 示例模型 |
 |----------|----------|
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
-| OpenAI | GPT-4o, GPT-4 |
-| DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash |
+| Anthropic | Claude 4 Sonnet, Claude 4 Opus |
+| OpenAI | GPT-4o, GPT-4, GPT-5 |
+| DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash, DeepSeek-R1 |
 | Google | Gemini 2.5 Pro |
-| Mimo | mimo-v2.5-pro |
-| Moonshot | Kimi |
-| 更多... | Ollama, LM Studio, vLLM 等本地模型 |
+| Mimo | mimo-v2.5-pro, mimo-v2.5 |
+| Moonshot | Kimi K2, Kimi K3 |
+| 更多... | Ollama, LM Studio, Qwen, Doubao 等本地/国产模型 |
 
 ## 项目地址
 
@@ -72,3 +74,4 @@ https://github.com/Adam-PAN/cline-multi
 本项目基于 [Apache-2.0](LICENSE) 许可证开源。
 
 原版 Cline 版权归属于 [Cline 团队](https://github.com/cline/cline)。
+

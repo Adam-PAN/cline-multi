@@ -1,4 +1,4 @@
-import { Anthropic } from "@anthropic-ai/sdk"
+﻿import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import { ApiProvider } from "@/shared/api"
 import {
@@ -254,7 +254,7 @@ export function convertToOpenAiMessages(
 				// Set content to blank when tool_calls are present but content has no text, per OpenAI API spec
 				const hasToolCalls = tool_calls.length > 0
 				const hasMeaningfulContent = content !== undefined && content.trim() !== ""
-				const finalContent = hasMeaningfulContent ? content : hasToolCalls ? null : undefined
+				const finalContent = hasMeaningfulContent ? content : hasToolCalls ? null : ""
 
 				const consolidatedReasoningDetails =
 					reasoningDetails.length > 0 ? consolidateReasoningDetails(reasoningDetails as any) : []
@@ -308,7 +308,9 @@ function consolidateReasoningDetails(reasoningDetails: ReasoningDetail[]): Reaso
 		// Drop corrupted encrypted reasoning blocks that would otherwise trigger:
 		// "Invalid input: expected string, received undefined" for reasoning_details.*.data
 		// See: https://github.com/cline/cline/issues/8214
-		if (detail.type === "reasoning.encrypted" && !detail.data) continue
+		if (detail.type === "reasoning.encrypted" && !detail.data) {
+			continue
+		}
 
 		const index = detail.index ?? 0
 		if (!groupedByIndex.has(index)) {

@@ -67,7 +67,7 @@ export class StateManager {
 
 	/**
 	 * File-backed storage context. All reads/writes to persistent state go through here.
-	 * Do NOT access VSCode's ExtensionContext for storage — use this instead.
+	 * Do NOT access VSCode's ExtensionContext for storage 鈥?use this instead.
 	 */
 	private storage: StorageContext
 	private isInitialized = false
@@ -865,7 +865,13 @@ export class StateManager {
 		const entries: Record<string, string | undefined> = {}
 		for (const key of keys) {
 			const value = this.secretsCache[key]
-			entries[key] = value || undefined // Convert empty strings to undefined (delete)
+			if (value) {
+				entries[key] = value
+			} else {
+				// Preserve existing secret when new value is empty/undefined
+				const existing = await this.storage.secrets.get(key as SecretKey)
+				entries[key] = existing ?? undefined
+			}
 		}
 		this.storage.secrets.setBatch(entries)
 	}
