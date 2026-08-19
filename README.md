@@ -69,9 +69,21 @@ https://github.com/Adam-PAN/cline-multi
 
 欢迎 Star ⭐、Fork 🍴、提出 Issue 和贡献代码！
 
+## 更新日志
+
+详见 [CHANGELOG.md](CHANGELOG.md)
+
+最近更新 (v3.86.11)：
+- 友好中文错误提示卡片（模型不存在、内容拦截、服务器错误等）
+- 聊天界面底部实时显示 Token 用量和费用
+- 每个 API 配置独立存储价格，修复 [#1](https://github.com/Adam-PAN/cline-multi/issues/1)
+- DeepSeek 新增价格输入框
+- 修复 DeepSeek V4 / Mimo 推理模型的多项兼容性问题
+
 ## 许可证
 
 本项目基于 [Apache-2.0](LICENSE) 许可证开源。
 
 原版 Cline 版权归属于 [Cline 团队](https://github.com/cline/cline)。
+
 
