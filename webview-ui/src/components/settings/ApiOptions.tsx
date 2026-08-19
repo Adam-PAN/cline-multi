@@ -213,16 +213,16 @@ export const ProfileManager: React.FC<{ currentMode: Mode; showCards?: boolean; 
 		return modelInfoMap[selectedProvider]
 	}
 
-	const profilePayload = () => {
+	const profilePayload = (): Omit<ApiConfigProfile, "id" | "name"> => {
 		const modelInfo = getCurrentModelInfo()
-		const payload: Record<string, any> = {
+		const payload: Omit<ApiConfigProfile, "id" | "name"> = {
 			provider: selectedProvider,
 			apiKey: getCurrentApiKey(),
 			modelId: getCurrentModelId(),
 			baseUrl: getCurrentBaseUrl(),
 		}
 		if (modelInfo) {
-			payload.extra = { profileModelInfo: modelInfo }
+			;(payload as any).extra = { profileModelInfo: modelInfo }
 		}
 		return payload
 	}
