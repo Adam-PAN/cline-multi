@@ -4,8 +4,9 @@ import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react"
 import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ApiKeyField } from "../common/ApiKeyField"
+import { EditableModelSelector } from "../common/EditableModelSelector"
 import { ModelInfoView } from "../common/ModelInfoView"
-import { DropdownContainer, ModelSelector } from "../common/ModelSelector"
+import { DropdownContainer } from "../common/ModelSelector"
 import ThinkingBudgetSlider from "../ThinkingBudgetSlider"
 import { normalizeApiConfiguration } from "../utils/providerUtils"
 import { useApiConfigurationHandlers } from "../utils/useApiConfigurationHandlers"
@@ -70,7 +71,7 @@ export const MinimaxProvider = ({ showModelOptions, isPopup, currentMode }: Mini
 
 			{showModelOptions && (
 				<>
-					<ModelSelector
+					<EditableModelSelector
 						label={t("settings.model")}
 						models={minimaxModels}
 						onChange={(e: any) =>

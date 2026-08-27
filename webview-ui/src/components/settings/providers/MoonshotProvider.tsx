@@ -6,8 +6,9 @@ import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ModelsServiceClient } from "@/services/grpc-client"
 import { ApiKeyField } from "../common/ApiKeyField"
+import { EditableModelSelector } from "../common/EditableModelSelector"
 import { ModelInfoView } from "../common/ModelInfoView"
-import { DropdownContainer, ModelSelector } from "../common/ModelSelector"
+import { DropdownContainer } from "../common/ModelSelector"
 import { normalizeApiConfiguration } from "../utils/providerUtils"
 
 /**
@@ -84,7 +85,7 @@ export const MoonshotProvider = ({ showModelOptions, isPopup, currentMode }: Moo
 
 			{showModelOptions && (
 				<>
-					<ModelSelector
+					<EditableModelSelector
 						label={t("settings.model")}
 						models={moonshotModels}
 						onChange={async (e: any) => {

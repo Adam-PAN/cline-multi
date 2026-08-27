@@ -6,8 +6,8 @@ import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ApiKeyField } from "../common/ApiKeyField"
 import { BaseUrlField } from "../common/BaseUrlField"
 import { ContextWindowSwitcher } from "../common/ContextWindowSwitcher"
+import { EditableModelSelector } from "../common/EditableModelSelector"
 import { ModelInfoView } from "../common/ModelInfoView"
-import { ModelSelector } from "../common/ModelSelector"
 import { RemotelyConfiguredInputWrapper } from "../common/RemotelyConfiguredInputWrapper"
 import ReasoningEffortSelector from "../ReasoningEffortSelector"
 import ThinkingBudgetSlider from "../ThinkingBudgetSlider"
@@ -79,7 +79,7 @@ export const AnthropicProvider = ({ showModelOptions, isPopup, currentMode }: An
 
 			{showModelOptions && (
 				<>
-					<ModelSelector
+					<EditableModelSelector
 						label={t("settings.model")}
 						models={anthropicModels}
 						onChange={(e) =>

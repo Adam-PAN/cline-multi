@@ -3,8 +3,8 @@ import { Mode } from "@shared/storage/types"
 import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ApiKeyField } from "../common/ApiKeyField"
+import { EditableModelSelector } from "../common/EditableModelSelector"
 import { ModelInfoView } from "../common/ModelInfoView"
-import { ModelSelector } from "../common/ModelSelector"
 import { normalizeApiConfiguration } from "../utils/providerUtils"
 import { useApiConfigurationHandlers } from "../utils/useApiConfigurationHandlers"
 
@@ -35,7 +35,7 @@ export const FireworksProvider = ({ currentMode, isPopup, showModelOptions }: Fi
 				providerName="Fireworks"
 				signupUrl="https://fireworks.ai/"
 			/>
-			<ModelSelector
+			<EditableModelSelector
 				label={t("settings.model")}
 				models={fireworksModels}
 				onChange={(e: any) => {

@@ -7,8 +7,8 @@ import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { DROPDOWN_Z_INDEX, DropdownContainer } from "../ApiOptions"
 import { DebouncedTextField } from "../common/DebouncedTextField"
+import { EditableModelSelector } from "../common/EditableModelSelector"
 import { ModelInfoView } from "../common/ModelInfoView"
-import { ModelSelector } from "../common/ModelSelector"
 import { LockIcon, RemotelyConfiguredInputWrapper } from "../common/RemotelyConfiguredInputWrapper"
 import ReasoningEffortSelector from "../ReasoningEffortSelector"
 import ThinkingBudgetSlider from "../ThinkingBudgetSlider"
@@ -127,7 +127,7 @@ export const VertexProvider = ({ showModelOptions, isPopup, currentMode }: Verte
 
 			{showModelOptions && (
 				<>
-					<ModelSelector
+					<EditableModelSelector
 						label={t("settings.model")}
 						models={modelsToUse}
 						onChange={(e: any) =>

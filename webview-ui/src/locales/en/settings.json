@@ -286,8 +286,7 @@
 			"maxOutputTokens": "Max Output Tokens",
 			"inputPricePerMillion": "Input Price / 1M tokens",
 			"outputPricePerMillion": "Output Price / 1M tokens",
-			"temperature": "Temperature",
-			"noteComplexPrompts": "Note: Cline uses complex prompts and works best with Claude models. Less capable models may not work as expected."
+			"temperature": "Temperature"
 		},
 		"openRouter": {
 			"name": "OpenRouter",
@@ -360,7 +359,6 @@
 			"requestTimeoutDescription": "Maximum time in milliseconds to wait for API responses before timing out.",
 			"quickstartGuide": "quickstart guide.",
 			"ollamaInstructions": "Ollama allows you to run models locally on your computer. For instructions on how to get started, see their",
-			"noteComplexPrompts": "Note: Cline uses complex prompts and works best with Claude models. Less capable models may not work as expected.",
 			"seeQuickstart": "Ollama allows you to run models locally on your computer. For instructions on how to get started, see their quickstart guide.",
 			"modelExample": "e.g. llama3.1",
 			"contextLengthExample": "e.g. 32768"
@@ -375,12 +373,10 @@
 		"together": {
 			"name": "Together",
 			"modelId": "Model ID",
-			"noteComplexPrompts": "Note: Cline uses complex prompts and works best with Claude models. Less capable models may not work as expected.",
 			"modelIdPlaceholder": "Enter Model ID..."
 		},
 		"xai": {
 			"name": "X AI",
-			"noteComplexPrompts": "Note: Cline uses complex prompts and works best with Claude models. Less capable models may not work as expected.",
 			"reasoningEffort": "Reasoning Effort"
 		},
 		"groq": {
@@ -403,8 +399,7 @@
 			"name": "Nebius"
 		},
 		"nousresearch": {
-			"name": "NousResearch",
-			"noteComplexPrompts": "Note: Cline uses complex prompts and works best with Claude models. Less capable models may not work as expected."
+			"name": "NousResearch"
 		},
 		"sambanova": {
 			"name": "SambaNova"

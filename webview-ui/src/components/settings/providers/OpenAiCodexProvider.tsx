@@ -4,8 +4,8 @@ import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { AccountServiceClient } from "@/services/grpc-client"
+import { EditableModelSelector } from "../common/EditableModelSelector"
 import { ModelInfoView } from "../common/ModelInfoView"
-import { ModelSelector } from "../common/ModelSelector"
 import ReasoningEffortSelector from "../ReasoningEffortSelector"
 import { normalizeApiConfiguration, supportsReasoningEffortForModelId } from "../utils/providerUtils"
 import { useApiConfigurationHandlers } from "../utils/useApiConfigurationHandlers"
@@ -73,7 +73,7 @@ export const OpenAiCodexProvider = ({ showModelOptions, isPopup, currentMode }: 
 
 			{showModelOptions && (
 				<>
-					<ModelSelector
+					<EditableModelSelector
 						label={t("settings.model")}
 						models={openAiCodexModels}
 						onChange={(e: any) =>

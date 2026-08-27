@@ -55,13 +55,17 @@ Cline Multi 基于 [Cline](https://github.com/cline/cline) 构建，是一款支
 
 | Provider | 示例模型 |
 |----------|----------|
-| Anthropic | Claude 4 Sonnet, Claude 4 Opus |
-| OpenAI | GPT-4o, GPT-4, GPT-5 |
-| DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash, DeepSeek-R1 |
-| Google | Gemini 2.5 Pro |
-| Mimo | mimo-v2.5-pro, mimo-v2.5 |
-| Moonshot | Kimi K2, Kimi K3 |
-| 更多... | Ollama, LM Studio, Qwen, Doubao 等本地/国产模型 |
+| Anthropic | Claude Opus 5, Claude Sonnet 5, Claude Fable 5, Claude Mythos 5 |
+| OpenAI | GPT-5.6 Sol/Terra/Luna, GPT-5.5, GPT-5.4, o4-mini |
+| DeepSeek | DeepSeek V4 Pro/Flash, V4 Flash Vision, V4 Flash 0731 (1.3M ctx) |
+| Google | Gemini 3.7 Flash, Gemini 3.1 Pro, Gemini 2.5 Pro |
+| Qwen/通义 | Qwen3.8 Max/Flash, Qwen3 Coder Plus/Flash, Qwen3.7 |
+| Kimi/Moonshot | Kimi K3 (1M ctx), Kimi K2.7 Code, Kimi K2.6 |
+| GLM/智谱 | GLM-5.3 Flash (1.3M ctx), GLM-5.3, GLM-5.2, GLM-5 |
+| XAI/Grok | Grok 4.20 (2M ctx), Grok 4.6, Grok 4.5, Grok 4.3 |
+| Doubao/豆包 | Seed 2.1 Turbo, Seed 2.0 Code, Seed 2.0 Lite |
+| MiniMax | MiniMax M3 (1M ctx), MiniMax M2.7 |
+| 更多... | Ollama, LM Studio, Mistral, Fireworks, Nebius 等 |
 
 ## 项目地址
 
@@ -73,12 +77,13 @@ https://github.com/Adam-PAN/cline-multi
 
 详见 [CHANGELOG.md](CHANGELOG.md)
 
-最近更新 (v3.87.0)：
-- 友好中文错误提示卡片（模型不存在、内容拦截、服务器错误等）
-- 聊天界面底部实时显示 Token 用量和费用
-- 每个 API 配置独立存储价格，修复 [#1](https://github.com/Adam-PAN/cline-multi/issues/1)
-- DeepSeek 新增价格输入框
-- 修复 DeepSeek V4 / Mimo 推理模型的多项兼容性问题
+最近更新 (v4.1.0)：
+- **全厂商模型下拉框支持自由输入** — 可输入任意自定义模型 ID
+- **新增 Claude 5 全系列** — Opus 5, Sonnet 5, Fable 5, Mythos 5
+- **国产模型大规模更新** — Kimi K3 (1M), GLM-5.3 Flash (1.3M), Qwen3.8, Seed 2.1 等
+- **XAI/Grok 新模型** — Grok 4.20 (2M ctx), Grok 4.6/4.5/4.3
+- **OpenAI 新模型** — GPT-5.6 Sol/Terra/Luna 及 Pro 变体
+- 详见 [CHANGELOG.md](CHANGELOG.md)
 
 ## 许可证
 

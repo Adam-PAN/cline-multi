@@ -1,6 +1,34 @@
 # Changelog
 
-## [3.87.0]
+## [4.1.0]
+
+### Added
+
+- **EditableModelSelector**: All provider model dropdowns now support free-text input — users can type any custom model ID and save it
+- **Anthropic Claude 5 models**: claude-opus-5, claude-sonnet-5, claude-fable-5, claude-mythos-5 (with 1M context variants)
+- **DeepSeek**: deepseek-v4-flash-vision-exp (vision support), deepseek-v4-flash-0731 (1.3M context), deepseek-v3.2, deepseek-v3.1-terminus, deepseek-chat-v3.1
+- **XAI/Grok**: grok-4.20 (2M context), grok-4.20-multi-agent, grok-4.6, grok-4.5, grok-4.3
+- **OpenAI**: gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, gpt-5.6-sol-pro, gpt-5.6-terra-pro, gpt-5.6-luna-pro, gpt-5.5-pro, gpt-5.4-pro, gpt-5.2-pro, gpt-5.1-mini
+- **Gemini**: gemini-3.7-flash, gemini-3.6-flash, gemini-3.5-flash-lite, gemini-3.1-pro (GA), gemini-3.1-flash-lite
+- **Qwen/通义**: qwen3.8-max, qwen3.8-flash, qwen3.7-max/plus/flash, qwen3.6-plus/flash, qwen3.5-plus/flash, qwen3-coder-flash, qwen3-coder-next (intl + mainland)
+- **Kimi/Moonshot**: kimi-k3 (1M context), kimi-k2.7-code
+- **GLM/智谱**: glm-5.3-flash (1.3M context), glm-5.3, glm-5.2, glm-5-turbo, glm-5v-turbo, glm-4.7-flash (intl + mainland)
+- **Doubao/豆包**: seed-2-1-turbo, seed-2.0-code, seed-2.0-lite, seed-2.0-mini, seed-1.6-flash, seed-1.6
+- **MiniMax**: MiniMax-M3 (1M context), MiniMax-M1
+- **Bedrock**: anthropic.claude-opus-5, anthropic.claude-sonnet-5, anthropic.claude-fable-5, anthropic.claude-mythos-5
+- **Claude Code**: claude-opus-5, claude-sonnet-5, claude-fable-5, claude-mythos-5
+
+### Changed
+
+- Default Anthropic model updated to claude-sonnet-5
+- Default Claude Code model updated to claude-sonnet-5
+- normalizeApiConfiguration now preserves custom model IDs with sane defaults (8K output, 128K context)
+
+### Fixed
+
+- EditableModelSelector now uses native input + datalist with VS Code theme CSS variables for proper styling
+- EditableModelSelector dropdown z-index handling to prevent UI elements from being hidden
+
 
 ### Added
 

@@ -183,6 +183,17 @@ export function normalizeApiConfiguration(
 		if (modelId && modelId in models) {
 			selectedModelId = modelId
 			selectedModelInfo = models[modelId]
+		} else if (modelId) {
+			// Custom model ID - use it with sane defaults
+			selectedModelId = modelId
+			selectedModelInfo = {
+				maxTokens: 8192,
+				contextWindow: 128_000,
+				supportsImages: false,
+				supportsPromptCache: false,
+				inputPrice: 0,
+				outputPrice: 0,
+			}
 		} else {
 			selectedModelId = defaultId
 			selectedModelInfo = models[defaultId]

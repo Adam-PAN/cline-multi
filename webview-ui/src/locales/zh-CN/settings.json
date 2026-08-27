@@ -286,8 +286,7 @@
 			"maxOutputTokens": "最大输出令牌数",
 			"inputPricePerMillion": "输入价格 / 百万令牌",
 			"outputPricePerMillion": "输出价格 / 百万令牌",
-			"temperature": "温度",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。"
+			"temperature": "温度"
 		},
 		"openRouter": {
 			"name": "OpenRouter",
@@ -360,7 +359,6 @@
 			"requestTimeoutDescription": "等待 API 响应的最大超时时间（毫秒）。",
 			"quickstartGuide": "快速入门指南。",
 			"ollamaInstructions": "Ollama 允许您在本地计算机上运行模型。有关如何入门的说明，请参阅其",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。",
 			"seeQuickstart": "Ollama 允许您在本地计算机上运行模型。有关如何开始使用的说明，请参见他们的快速入门指南。",
 			"modelExample": "例如 llama3.1",
 			"contextLengthExample": "例如 32768"
@@ -375,12 +373,10 @@
 		"together": {
 			"name": "Together",
 			"modelId": "模型 ID",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。",
 			"modelIdPlaceholder": "输入模型 ID..."
 		},
 		"xai": {
 			"name": "X AI",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。",
 			"reasoningEffort": "推理力度"
 		},
 		"groq": {
@@ -403,8 +399,7 @@
 			"name": "Nebius"
 		},
 		"nousresearch": {
-			"name": "NousResearch",
-			"noteComplexPrompts": "注意：Cline 使用复杂的提示词，能力较弱的模型可能无法按预期工作。"
+			"name": "NousResearch"
 		},
 		"sambanova": {
 			"name": "SambaNova"
