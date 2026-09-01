@@ -836,7 +836,7 @@ export class SubagentRunner {
 		fullConversation: ClineStorageMessage[],
 		nativeTools: ClineTool[] | undefined,
 		providerId: string,
-		_modelId: string,
+		modelId: string,
 		contextManager: ContextManager,
 		contextState: SubagentContextState,
 	) {
