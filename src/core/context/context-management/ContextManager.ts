@@ -627,6 +627,7 @@ export class ContextManager {
 		apiConversationHistory: Anthropic.Messages.MessageParam[],
 		conversationHistoryDeletedRange: [number, number] | undefined,
 		timestamp: number,
+		threshold: number = 0.3,
 	): {
 		anyContextUpdates: boolean
 		needToTruncate: boolean
@@ -651,7 +652,7 @@ export class ContextManager {
 
 		return {
 			anyContextUpdates: true,
-			needToTruncate: percentSaved < 0.3,
+			needToTruncate: percentSaved < threshold,
 		}
 	}
 
@@ -664,6 +665,7 @@ export class ContextManager {
 		clineMessages: ClineMessage[],
 		previousApiReqIndex: number,
 		taskDirectory: string,
+		threshold: number = 0.3,
 	): Promise<boolean> {
 		// Extract timestamp using same logic as getNewContextMessagesAndMetadata
 		if (previousApiReqIndex < 0) {
@@ -681,6 +683,7 @@ export class ContextManager {
 			apiConversationHistory,
 			conversationHistoryDeletedRange,
 			timestamp,
+			threshold,
 		)
 
 		if (anyContextUpdates) {

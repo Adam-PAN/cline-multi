@@ -105,6 +105,70 @@ export interface ClineStorageMessage extends Anthropic.MessageParam {
 }
 
 /**
+/**
+ * Strips image blocks from conversation history, replacing them with text placeholders.
+ * Used when switching from a multimodal model to a text-only model to prevent API errors.
+ *
+ * @param messages - Array of ClineStorageMessage to strip images from
+ * @returns An object with the stripped messages and whether any images were removed
+ */
+export function stripImagesFromMessages(messages: ClineStorageMessage[]): {
+	messages: ClineStorageMessage[]
+	imagesStripped: boolean
+} {
+	let imagesStripped = false
+
+	const stripped = messages.map((msg) => {
+		if (typeof msg.content === "string") {
+			return msg
+		}
+
+		if (!Array.isArray(msg.content)) {
+			return msg
+		}
+
+		let hasImage = false
+		const newContent = msg.content.map((block: any) => {
+			if (block.type === "image") {
+				hasImage = true
+				return {
+					type: "text" as const,
+					text: "[Image: content not supported by current model]",
+				}
+			}
+			// Handle tool_result blocks that may contain image content
+			if (block.type === "tool_result" && Array.isArray(block.content)) {
+				const innerHasImage = block.content.some((inner: any) => inner.type === "image")
+				if (innerHasImage) {
+					hasImage = true
+					return {
+						...block,
+						content: block.content.map((inner: any) => {
+							if (inner.type === "image") {
+								return {
+									type: "text" as const,
+									text: "[Image: content not supported by current model]",
+								}
+							}
+							return inner
+						}),
+					}
+				}
+			}
+			return block
+		})
+
+		if (hasImage) {
+			imagesStripped = true
+		}
+
+		return hasImage ? { ...msg, content: newContent } : msg
+	})
+
+	return { messages: stripped, imagesStripped }
+}
+
+/**
  * Converts ClineStorageMessage to Anthropic.MessageParam by removing Cline-specific fields
  * Cline-specific fields (like modelInfo, reasoning_details) are properly omitted.
  */

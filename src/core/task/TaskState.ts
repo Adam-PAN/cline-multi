@@ -55,6 +55,7 @@ export class TaskState {
 	consecutiveMistakeCount = 0
 	doubleCheckCompletionPending = false
 	didAutomaticallyRetryFailedApiRequest = false
+	hasNotifiedImageStripping = false
 	checkpointManagerErrorMessage?: string
 
 	// Retry tracking for auto-retry feature

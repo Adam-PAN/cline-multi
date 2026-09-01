@@ -20,8 +20,26 @@ export function getContextWindowInfo(api: ApiHandler) {
 			maxAllowedSize = contextWindow - 40_000
 			break
 		default:
-			maxAllowedSize = Math.max(contextWindow - 40_000, contextWindow * 0.8) // for deepseek, 80% of 64k meant only ~10k buffer which was too small and resulted in users getting context window errors.
+			// For very large context windows (500K+), use 92% to maximize usable space
+			// For smaller windows, keep the existing conservative formula
+			if (contextWindow >= 500_000) {
+				maxAllowedSize = Math.floor(contextWindow * 0.92)
+			} else {
+				maxAllowedSize = Math.max(contextWindow - 40_000, contextWindow * 0.8)
+			}
 	}
 
 	return { contextWindow, maxAllowedSize }
+}
+
+/**
+ * Determines if a model supports auto-condense (automatic context summarization).
+ * Uses context window size as the signal: models with >= 200K context window
+ * are considered capable enough to handle the summarize_task flow reliably.
+ * This replaces the previous isNextGenModelFamily() check which was too restrictive
+ * and excluded capable models like DeepSeek V3, Qwen-Long, Kimi, etc.
+ */
+export function supportsAutoCondense(api: ApiHandler): boolean {
+	const contextWindow = api.getModel().info.contextWindow || 128_000
+	return contextWindow >= 200_000
 }

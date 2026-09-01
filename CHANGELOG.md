@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.2.0]
+
+### Added
+
+- **Context compression: auto-condense for more models** — Replaced model-family-based check with context-window-based check (>= 200K), enabling auto-condense for models like Kimi K3, Qwen-Long, MiniMax-M3, and other large-context models that were previously excluded
+- **Context compression: optimized buffer for 500K+ models** — Ultra-large context windows (500K+) now use 92% utilization instead of the conservative formula, freeing up ~120K additional tokens for 1M models
+- **Context compression: lite summary template** — Added summarizeTaskLite with 4 essential sections (down from 10) for models with <200K context, reducing the token cost of summarization itself
+- **Context compression: configurable file optimization threshold** — New ileOptimizationThreshold setting (default: 0.3) allows users to tune when file-read optimization triggers compaction
+- **Multimodal image stripping** — When switching from a vision model to a text-only model, images in conversation history are automatically replaced with text placeholders to prevent API errors
+- **Image stripping notification** — First-time image stripping shows a one-time notification explaining that historical images were removed
+
+### Changed
+
+- Auto-condense eligibility now determined by context window size (>= 200K) instead of hardcoded model family list
+- SubagentRunner also applies image stripping for consistency with the main task flow
+
+### Fixed
+
+- Fixed potential API errors when switching from multimodal models (GPT-4o, Claude, Gemini) to text-only models (DeepSeek, Qwen, etc.) in an ongoing conversation with image content
+- Image stripping notification now shows only once per task session instead of on every API call
 ## [4.1.0]
 
 ### Added
@@ -147,4 +167,5 @@
 - Wire up remote `globalSkills` from enterprise remote config with full UI, toggle support, and system prompt integration — enterprise-managed skills now appear under a dedicated "Enterprise Skills" section and support `alwaysEnabled` enforcement
 - Onboarding flow now uses dynamically fetched recommended models instead of a hardcoded list, with a fallback to the welcome view on failure
 - Add dedicated "Quota Exceeded" error message in the chat error UI when Cline account spend caps are hit
+
 

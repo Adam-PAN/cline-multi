@@ -2,12 +2,19 @@ import * as path from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
 import type { ApiHandler, buildApiHandler } from "@core/api"
 import { parseAssistantMessageV2, ToolUse } from "@core/assistant-message"
+import { supportsAutoCondense } from "@core/context/context-management/context-window-utils"
 import { discoverAvailableSkills } from "@core/context/instructions/user-instructions/skills"
 import { formatResponse } from "@core/prompts/responses"
 import { PromptRegistry } from "@core/prompts/system-prompt"
 import type { SystemPromptContext } from "@core/prompts/system-prompt/types"
 import { StreamResponseHandler } from "@core/task/StreamResponseHandler"
-import { ClineAssistantToolUseBlock, ClineStorageMessage, ClineTextContentBlock, ClineUserContent } from "@shared/messages"
+import {
+	ClineAssistantToolUseBlock,
+	ClineStorageMessage,
+	ClineTextContentBlock,
+	ClineUserContent,
+	stripImagesFromMessages,
+} from "@shared/messages"
 import { Logger } from "@shared/services/Logger"
 import { ClineDefaultTool, ClineTool } from "@shared/tools"
 import { ContextManager } from "@/core/context/context-management/ContextManager"
@@ -17,7 +24,6 @@ import { HostRegistryInfo } from "@/registry"
 import { ClineError, ClineErrorType } from "@/services/error"
 import { ApiFormat } from "@/shared/proto/cline/models"
 import { calculateApiCostAnthropic } from "@/utils/cost"
-import { isNextGenModelFamily } from "@/utils/model-utils"
 import { TaskState } from "../../TaskState"
 import { ToolExecutorCoordinator } from "../ToolExecutorCoordinator"
 import { ToolValidator } from "../ToolValidator"
@@ -810,11 +816,11 @@ export class SubagentRunner {
 	private shouldCompactBeforeNextRequest(
 		requestTotalTokens: number,
 		api: ReturnType<typeof buildApiHandler>,
-		modelId: string,
+		_modelId: string,
 	): boolean {
 		const { contextWindow, maxAllowedSize } = getContextWindowInfo(api)
 		const useAutoCondense = this.baseConfig.services.stateManager.getGlobalSettingsKey("useAutoCondense")
-		if (useAutoCondense && isNextGenModelFamily(modelId)) {
+		if (useAutoCondense && supportsAutoCondense(api)) {
 			const autoCondenseThreshold = 0.75
 			const roundedThreshold = autoCondenseThreshold ? Math.floor(contextWindow * autoCondenseThreshold) : maxAllowedSize
 			const thresholdTokens = Math.min(roundedThreshold, maxAllowedSize)
@@ -830,14 +836,21 @@ export class SubagentRunner {
 		fullConversation: ClineStorageMessage[],
 		nativeTools: ClineTool[] | undefined,
 		providerId: string,
-		modelId: string,
+		_modelId: string,
 		contextManager: ContextManager,
 		contextState: SubagentContextState,
 	) {
 		for (let attempt = 1; attempt <= MAX_INITIAL_STREAM_ATTEMPTS; attempt += 1) {
-			const truncatedConversation = contextManager
+			let truncatedConversation = contextManager
 				.getTruncatedMessages(fullConversation, contextState.conversationHistoryDeletedRange)
 				.map((message) => message as ClineStorageMessage)
+
+			// Strip images if model does not support vision
+			const modelSupportsImages = api.getModel().info.supportsImages ?? false
+			if (!modelSupportsImages) {
+				const { messages: strippedMsgs } = stripImagesFromMessages(truncatedConversation)
+				truncatedConversation = strippedMsgs
+			}
 			const stream = api.createMessage(systemPrompt, truncatedConversation, nativeTools)
 			const iterator = stream[Symbol.asyncIterator]()
 

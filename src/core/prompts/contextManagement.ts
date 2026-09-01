@@ -109,6 +109,45 @@ ${
 `
 }
 
+/**
+ * Lite version of summarizeTask for weaker models (context window < 200K).
+ * Reduced from 10 sections to 4, much simpler instructions.
+ */
+export const summarizeTaskLite = (focusChainSettings?: { enabled: boolean }, cwd?: string) => {
+	const CWD = cwd ? cwd.toPosix() : ""
+
+	return `<explicit_instructions type="summarize_task">
+The conversation is running out of context. Create a summary to continue work.
+
+You have two options:
+1. If all tasks are done, call attempt_completion
+2. Otherwise, call summarize_task with a detailed summary
+
+You MUST use one of these two tools. When summarizing, include:
+
+<thinking>Organize your summary here</thinking>
+<summarize_task>
+<context>
+1. What the user asked for
+2. Key files and code changes made
+3. What was completed and what remains
+4. Current working state and next steps
+</context>
+${
+	focusChainSettings?.enabled
+		? `<task_progress>
+- [x] Done items
+- [ ] Remaining items
+</task_progress>`
+		: ""
+}
+</summarize_task>
+
+Working directory: ${CWD}
+</explicit_instructions>\n
+`
+}
+
 export const continuationPrompt = (summaryText: string) => `
 This session is being continued from a previous conversation that ran out of context. The conversation is summarized below:
 ${summaryText}.

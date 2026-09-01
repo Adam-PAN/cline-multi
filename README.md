@@ -26,6 +26,8 @@ Cline Multi 基于 [Cline](https://github.com/cline/cline) 构建，是一款支
 - **实时成本监控** — 聊天界面底部实时显示 Token 用量和费用
 - **完整中文支持** — 界面全面中文化，中文 prompt 优化
 - **全功能 AI 助手** — 文件读写、终端命令、浏览器操作、MCP 服务器等完整能力
+- **智能上下文压缩** — 自动为大上下文模型（200K+）启用 auto-condense，500K+ 模型使用92%高效缓冲，弱模型使用精简摘要模板
+- **多模态智能切换** — 从图片识别模型切回纯语言模型时，自动剥离历史图片并提示用户，切回多模态模型后图片自动恢复
 
 ## 安装
 
@@ -90,6 +92,7 @@ https://github.com/Adam-PAN/cline-multi
 本项目基于 [Apache-2.0](LICENSE) 许可证开源。
 
 原版 Cline 版权归属于 [Cline 团队](https://github.com/cline/cline)。
+
 
 
 

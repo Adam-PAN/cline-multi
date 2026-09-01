@@ -289,6 +289,7 @@ message Settings {
   optional bool lazy_teammate_mode_enabled = 183;
   optional OpenRouterModelInfo plan_mode_deep_seek_model_info = 188;
   optional OpenRouterModelInfo act_mode_deep_seek_model_info = 189;
+  optional int32 file_optimization_threshold = 190;
 }
 
 message State {

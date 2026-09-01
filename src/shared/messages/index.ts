@@ -16,5 +16,10 @@ export type {
 	ClineUserContent,
 	ClineUserToolResultContentBlock,
 } from "./content"
-export { cleanContentBlock, convertClineStorageToAnthropicMessage, REASONING_DETAILS_PROVIDERS } from "./content"
+export {
+	cleanContentBlock,
+	convertClineStorageToAnthropicMessage,
+	REASONING_DETAILS_PROVIDERS,
+	stripImagesFromMessages,
+} from "./content"
 export type { ClineMessageMetricsInfo, ClineMessageModelInfo } from "./metrics"

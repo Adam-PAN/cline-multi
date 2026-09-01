@@ -4,7 +4,7 @@ import { ApiStream } from "@core/api/transform/stream"
 import { AssistantMessageContent, parseAssistantMessageV2, ToolUse } from "@core/assistant-message"
 import { ContextManager } from "@core/context/context-management/ContextManager"
 import { checkContextWindowExceededError } from "@core/context/context-management/context-error-handling"
-import { getContextWindowInfo } from "@core/context/context-management/context-window-utils"
+import { getContextWindowInfo, supportsAutoCondense } from "@core/context/context-management/context-window-utils"
 import { EnvironmentContextTracker } from "@core/context/context-tracking/EnvironmentContextTracker"
 import { FileContextTracker } from "@core/context/context-tracking/FileContextTracker"
 import { ModelContextTracker } from "@core/context/context-tracking/ModelContextTracker"
@@ -27,7 +27,7 @@ import { executePreCompactHookWithCleanup, HookCancellationError, HookExecution 
 import { ClineIgnoreController } from "@core/ignore/ClineIgnoreController"
 import { parseMentions } from "@core/mentions"
 import { CommandPermissionController } from "@core/permissions"
-import { summarizeTask } from "@core/prompts/contextManagement"
+import { summarizeTask, summarizeTaskLite } from "@core/prompts/contextManagement"
 import { formatResponse } from "@core/prompts/responses"
 import { parseSlashCommands } from "@core/slash-commands"
 import {
@@ -64,13 +64,7 @@ import { USER_CONTENT_TAGS } from "@shared/messages/constants"
 import { convertClineMessageToProto } from "@shared/proto-conversions/cline-message"
 import { ClineDefaultTool, READ_ONLY_TOOLS } from "@shared/tools"
 import { ClineAskResponse } from "@shared/WebviewMessage"
-import {
-	isClaude4PlusModelFamily,
-	isGPT5ModelFamily,
-	isLocalModel,
-	isNextGenModelFamily,
-	isParallelToolCallingEnabled,
-} from "@utils/model-utils"
+import { isClaude4PlusModelFamily, isGPT5ModelFamily, isLocalModel, isParallelToolCallingEnabled } from "@utils/model-utils"
 import { arePathsEqual, getDesktopDir } from "@utils/path"
 import { filterExistingFiles } from "@utils/tabFiltering"
 import cloneDeep from "clone-deep"
@@ -102,6 +96,7 @@ import {
 	ClineTextContentBlock,
 	ClineToolResponseContent,
 	ClineUserContent,
+	stripImagesFromMessages,
 } from "@/shared/messages"
 import { ApiFormat } from "@/shared/proto/cline/models"
 import { ShowMessageType } from "@/shared/proto/index.host"
@@ -2031,7 +2026,7 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 			this.taskState.conversationHistoryDeletedRange,
 			previousApiReqIndex,
 			await ensureTaskDirectoryExists(this.taskId),
-			this.stateManager.getGlobalSettingsKey("useAutoCondense") && isNextGenModelFamily(this.api.getModel().id),
+			this.stateManager.getGlobalSettingsKey("useAutoCondense") && supportsAutoCondense(this.api),
 		)
 
 		if (contextManagementMetadata.updatedConversationHistoryDeletedRange) {
@@ -2041,6 +2036,25 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 		}
 
 		// Response API requires native tool calls to be enabled
+
+		// Strip images from conversation history if the current model does not support vision.
+		// This prevents API errors when switching from a multimodal model to a text-only model.
+		const modelSupportsImages = this.api.getModel().info.supportsImages ?? false
+		if (!modelSupportsImages) {
+			const { messages: strippedMessages, imagesStripped } = stripImagesFromMessages(
+				contextManagementMetadata.truncatedConversationHistory,
+			)
+			if (imagesStripped) {
+				contextManagementMetadata.truncatedConversationHistory = strippedMessages
+				if (!this.taskState.hasNotifiedImageStripping) {
+					await this.say(
+						"text",
+						"⚠️ 已自动移除历史对话中的图片内容，因为当前模型不支持图片输入。如需图片分析，请切换到支持图片的模型。",
+					)
+					this.taskState.hasNotifiedImageStripping = true
+				}
+			}
+		}
 		const stream = this.api.createMessage(systemPrompt, contextManagementMetadata.truncatedConversationHistory, tools)
 
 		const iterator = stream[Symbol.asyncIterator]()
@@ -2536,7 +2550,7 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 		let shouldCompact = false
 		const useAutoCondense = this.stateManager.getGlobalSettingsKey("useAutoCondense")
 
-		if (useAutoCondense && isNextGenModelFamily(this.api.getModel().id)) {
+		if (useAutoCondense && supportsAutoCondense(this.api)) {
 			// When we initially trigger context cleanup, we increase the context window size, so we need state `currentlySummarizing`
 			// to track if we've already started the context summarization flow. After summarizing, we increment
 			// conversationHistoryDeletedRange to mask out the summarization-trigger user & assistant response messages
@@ -2583,6 +2597,7 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 						this.messageStateHandler.getClineMessages(),
 						previousApiReqIndex,
 						await ensureTaskDirectoryExists(this.taskId),
+						this.stateManager.getGlobalSettingsKey("fileOptimizationThreshold"),
 					)
 				}
 			}
@@ -2629,11 +2644,13 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 		if (shouldCompact) {
 			userContent.push({
 				type: "text",
-				text: summarizeTask(
-					this.stateManager.getGlobalSettingsKey("focusChainSettings"),
-					this.cwd,
-					isMultiRootEnabled(this.stateManager),
-				),
+				text: (() => {
+					const ctxWindow = this.api.getModel().info.contextWindow || 128_000
+					const focusChain = this.stateManager.getGlobalSettingsKey("focusChainSettings")
+					return ctxWindow < 200_000
+						? summarizeTaskLite(focusChain, this.cwd)
+						: summarizeTask(focusChain, this.cwd, isMultiRootEnabled(this.stateManager))
+				})(),
 			})
 		}
 
