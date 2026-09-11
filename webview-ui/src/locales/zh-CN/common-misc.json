@@ -94,7 +94,8 @@
 			"staging": "预发布",
 			"local": "本地",
 			"selfHosted": "自托管"
-		}
+		},
+		"clearSearch": "清除搜索"
 	},
 	"mcp": {
 		"configuration": {
@@ -226,7 +227,7 @@
 		"newTask": "新任务",
 		"mcpServers": "MCP 服务器",
 		"history": "历史记录",
-		"account": "账户",
+		"account": "我的",
 		"settings": "设置"
 	},
 	"browser": {
@@ -439,7 +440,8 @@
 		"older": "更早",
 		"selectAll": "全选",
 		"selectNone": "取消全选",
-		"deleteAllHistory": "删除所有历史记录"
+		"deleteAllHistory": "删除所有历史记录",
+		"deleteSelectedCount": "删除已选中的 {{count}} 项"
 	},
 	"historyView": {
 		"tokens": "Token",
@@ -452,6 +454,7 @@
 	},
 	"historyPreview": {
 		"viewAll": "查看全部",
-		"favorited": "已收藏"
+		"favorited": "已收藏",
+		"noRecentTasks": "暂无最近任务"
 	}
 }

@@ -21,11 +21,11 @@ const CreditsHistoryTable = memo(({ isLoading, usageData, paymentsData, showPaym
 			{/* Tabs container */}
 			<div className="flex border-b border-(--vscode-panel-border)">
 				<TabButton isActive={activeTab === "usage"} onClick={() => setActiveTab("usage")}>
-					USAGE HISTORY
+					使用记录
 				</TabButton>
 				{showPayments && (
 					<TabButton isActive={activeTab === "payments"} onClick={() => setActiveTab("payments")}>
-						PAYMENTS HISTORY
+						付款记录
 					</TabButton>
 				)}
 			</div>
@@ -42,18 +42,18 @@ const CreditsHistoryTable = memo(({ isLoading, usageData, paymentsData, showPaym
 							(usageData.length > 0 ? (
 								<VSCodeDataGrid>
 									<VSCodeDataGridRow row-type="header">
-										<VSCodeDataGridCell cell-type="columnheader" grid-column="1">
-											Date
-										</VSCodeDataGridCell>
-										<VSCodeDataGridCell cell-type="columnheader" grid-column="2">
-											Model
-										</VSCodeDataGridCell>
-										{/* <VSCodeDataGridCell cell-type="columnheader" grid-column="3">
-												Tokens Used
-											</VSCodeDataGridCell> */}
-										<VSCodeDataGridCell cell-type="columnheader" grid-column="3">
-											Credits Used
-										</VSCodeDataGridCell>
+									<VSCodeDataGridCell cell-type="columnheader" grid-column="1">
+										日期
+									</VSCodeDataGridCell>
+									<VSCodeDataGridCell cell-type="columnheader" grid-column="2">
+										模型
+									</VSCodeDataGridCell>
+									{/* <VSCodeDataGridCell cell-type="columnheader" grid-column="3">
+											Tokens Used
+										</VSCodeDataGridCell> */}
+									<VSCodeDataGridCell cell-type="columnheader" grid-column="3">
+										已用额度
+									</VSCodeDataGridCell>
 									</VSCodeDataGridRow>
 
 									{usageData.map((row, index) => (
@@ -88,13 +88,13 @@ const CreditsHistoryTable = memo(({ isLoading, usageData, paymentsData, showPaym
 								<VSCodeDataGrid>
 									<VSCodeDataGridRow row-type="header">
 										<VSCodeDataGridCell cell-type="columnheader" grid-column="1">
-											Date
+											日期
 										</VSCodeDataGridCell>
 										<VSCodeDataGridCell cell-type="columnheader" grid-column="2">
-											Total Cost
+											总费用
 										</VSCodeDataGridCell>
 										<VSCodeDataGridCell cell-type="columnheader" grid-column="3">
-											Credits
+											额度
 										</VSCodeDataGridCell>
 									</VSCodeDataGridRow>
 

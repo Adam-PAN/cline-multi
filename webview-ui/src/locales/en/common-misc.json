@@ -226,7 +226,7 @@
 		"newTask": "New Task",
 		"mcpServers": "MCP Servers",
 		"history": "History",
-		"account": "Account",
+		"account": "My",
 		"settings": "Settings"
 	},
 	"browser": {
@@ -455,3 +455,4 @@
 		"favorited": "Favorited"
 	}
 }
+

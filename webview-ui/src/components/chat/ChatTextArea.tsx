@@ -639,16 +639,28 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}
 				}
 
-				// Safari does not support InputEvent.isComposing (always false), so we need to fallback to keyCode === 229 for it
-				const isComposing = isSafari ? event.nativeEvent.keyCode === 229 : (event.nativeEvent?.isComposing ?? false)
-				if (event.key === "Enter" && !event.shiftKey && !isComposing) {
-					event.preventDefault()
+			// Safari does not support InputEvent.isComposing (always false), so we need to fallback to keyCode === 229 for it
+			const isComposing = isSafari ? event.nativeEvent.keyCode === 229 : (event.nativeEvent?.isComposing ?? false)
+			// Ctrl/Cmd + Enter: insert a newline at cursor instead of sending
+			if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !isComposing) {
+				event.preventDefault()
+				const textArea = event.currentTarget
+				const start = textArea.selectionStart ?? inputValue.length
+				const end = textArea.selectionEnd ?? inputValue.length
+				const newValue = `${inputValue.slice(0, start)}\n${inputValue.slice(end)}`
+				setInputValue(newValue)
+				setCursorPosition(start + 1)
+				setIntendedCursorPosition(start + 1)
+				return
+			}
+			if (event.key === "Enter" && !event.shiftKey && !isComposing) {
+				event.preventDefault()
 
-					if (!sendingDisabled) {
-						setIsTextAreaFocused(false)
-						onSend()
-					}
+				if (!sendingDisabled) {
+					setIsTextAreaFocused(false)
+					onSend()
 				}
+			}
 
 				if (event.key === "Backspace" && !isComposing) {
 					const charBeforeCursor = inputValue[cursorPosition - 1]

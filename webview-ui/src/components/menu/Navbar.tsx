@@ -50,8 +50,8 @@ export const Navbar = () => {
 			},
 			{
 				id: "account",
-				name: "Account",
-				tooltip: t("navbar.account"),
+				name: "我的",
+				tooltip: "我的",
 				icon: UserCircleIcon,
 				navigate: navigateToAccount,
 			},
@@ -90,3 +90,4 @@ export const Navbar = () => {
 		</nav>
 	)
 }
+

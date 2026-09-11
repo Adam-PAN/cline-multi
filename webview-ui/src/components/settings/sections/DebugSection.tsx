@@ -16,12 +16,12 @@ const DebugSection = ({ onResetState, renderSectionHeader }: DebugSectionProps) 
 		<div>
 			{renderSectionHeader("debug")}
 			<Section>
-				<Button onClick={() => onResetState()} variant="error">
-					Reset Workspace State
-				</Button>
-				<Button onClick={() => onResetState(true)} variant="error">
-					Reset Global State
-				</Button>
+			<Button onClick={() => onResetState()} variant="error">
+				重置工作区状态
+			</Button>
+			<Button onClick={() => onResetState(true)} variant="error">
+				重置全局状态
+			</Button>
 				<p className="text-xs mt-[5px] text-(--vscode-descriptionForeground)">
 					{t("settingsSections.resetStateDescription")}
 				</p>
@@ -34,7 +34,7 @@ const DebugSection = ({ onResetState, renderSectionHeader }: DebugSectionProps) 
 							.finally(() => setShowWelcome(true))
 					}
 					variant="secondary">
-					Reset Onboarding State
+					重置引导状态
 				</Button>
 			</Section>
 		</div>

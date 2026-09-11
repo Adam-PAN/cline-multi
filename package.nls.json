@@ -15,7 +15,7 @@
 	"cline.command.newTask": "新任务",
 	"cline.command.mcpServers": "MCP 服务器",
 	"cline.command.history": "历史记录",
-	"cline.command.account": "账户",
+	"cline.command.account": "我的",
 	"cline.command.settings": "设置",
 	"cline.command.createTestTasks": "创建测试任务",
 	"cline.command.expireMcpOAuthTokens": "过期 MCP OAuth 令牌（测试用）",

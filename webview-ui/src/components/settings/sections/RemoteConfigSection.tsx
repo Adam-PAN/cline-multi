@@ -59,7 +59,7 @@ function RefreshButton() {
 			className={`w-full rounded-xs ${isLoading ? "animate-pulse" : ""}`}
 			disabled={isLoading || (retryIn !== null && retryIn > 0)}
 			onClick={() => onRefresh()}>
-			Refresh {retryIn && retryIn > 0 && <>(Retry in: {retryIn} seconds)</>}
+			刷新 {retryIn && retryIn > 0 && <>（{retryIn} 秒后可重试）</>}
 		</VSCodeButton>
 	)
 }
@@ -182,7 +182,7 @@ function OtelSettingsSection() {
 		<div className="mb-4">
 			<h4 className="text-sm font-medium mb-2 flex items-center gap-2">
 				<i className="codicon codicon-pulse" />
-				OpenTelemetry Configuration
+				OpenTelemetry 配置
 			</h4>
 			<div className="bg-vscode-textBlockQuote-background rounded p-3 mb-2">
 				<SettingRow label={t("remoteConfig.otelEnabled")} value={otelEnabled} />
@@ -271,7 +271,7 @@ function PromptUploadingSection() {
 		<div className="mb-4">
 			<h4 className="text-sm font-medium mb-2 flex items-center gap-2">
 				<i className="codicon codicon-cloud-upload" />
-				Prompt Uploading Configuration
+				提示词上传配置
 			</h4>
 			<div className="bg-vscode-textBlockQuote-background rounded p-3 mb-2">
 				<SettingRow label={t("remoteConfig.storageType")} value={blobStoreConfig.adapterType?.toUpperCase()} />
@@ -325,11 +325,11 @@ export function RemoteConfigSection({ renderSectionHeader }: RemoteConfigSection
 			<BaseRemoteConfigSection renderSectionHeader={renderSectionHeader}>
 				<div className="flex flex-col justify-center gap-4">
 					<h3>
-						You haven't configured remote config yet. Do so through our{" "}
+						您尚未配置远程配置。请前往{" "}
 						<VSCodeLink href="https://app.cline.bot/dashboard/organization?tab=settings">
 							{t("remoteConfig.dashboard")}
 						</VSCodeLink>
-						.
+						进行设置。
 					</h3>
 
 					<RefreshButton />

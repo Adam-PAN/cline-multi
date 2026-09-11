@@ -30,7 +30,7 @@
 	"chat": {
 		"typeMessage": "输入消息...",
 		"typeTask": "在此输入你的任务...",
-		"contextHint": "输入 @ 添加上下文，输入 / 使用斜杠命令和工作流，按住 Shift 拖入文件/图片",
+		"contextHint": "Enter 发送，Ctrl+Enter 换行；输入 @ 添加上下文，输入 / 使用斜杠命令和工作流",
 		"addContext": "添加上下文",
 		"addFilesImages": "添加文件和图片",
 		"openApiSettings": "打开 API 设置",
@@ -371,7 +371,8 @@
 		"used": "已用：",
 		"total": "总计：",
 		"remaining": "剩余：",
-		"tokenUsage": "令牌使用量"
+		"tokenUsage": "令牌使用量",
+		"contextWindowUsage": "上下文窗口使用情况"
 	},
 	"focusChain": {
 		"allCompleted": "所有任务已完成！",
@@ -438,6 +439,59 @@
 		},
 		"dify": {
 			"workflowDescription": "Dify 工作流 - 模型选择已在您的 Dify 应用中配置"
+		}
+	},
+	"historyView": {
+		"addToFavorites": "添加收藏",
+		"delete": "删除",
+		"export": "导出",
+		"model": "模型",
+		"removeFromFavorites": "取消收藏",
+		"size": "大小",
+		"tokens": "Token"
+	},
+	"onboarding": {
+		"absolutelyFree": "完全免费",
+		"almostThere": "马上就好！",
+		"back": "返回",
+		"bringOwnKey": "使用自己的 API 密钥",
+		"bringOwnKeyDescription": "使用您的 API 密钥连接 Anthropic、OpenAI、OpenRouter、Google 或其他提供商。",
+		"completeInBrowser": "请在浏览器中完成账户设置...",
+		"configureYourProvider": "配置您的提供商",
+		"continue": "继续",
+		"createMyAccount": "创建我的账户",
+		"frontierModel": "旗舰模型",
+		"frontierModelDescription": "访问 Claude Sonnet 4.6 和 GPT-5 等旗舰模型进行复杂任务。",
+		"getStartedNoCost": "免费开始使用 Cline 提供的模型。",
+		"howWillYouUse": "您打算如何使用 Cline？",
+		"loginToCline": "登录 Cline",
+		"selectFreeModel": "选择一个免费模型",
+		"selectOption": "选择最适合您的选项。",
+		"selectYourModel": "选择您的模型"
+	},
+	"settings": {
+		"freeModel": "免费模型",
+		"recommendedModel": "推荐模型"
+	},
+	"settingsSections": {
+		"checkingConnection": "正在检查连接...",
+		"connected": "已连接",
+		"customBrowserArgsDescription": "启动 Chrome 时附加的额外命令行参数。",
+		"disableBrowserDescription": "禁用后，Cline 将无法使用浏览器工具。",
+		"disableBrowserToolUsage": "禁用浏览器工具使用",
+		"launchBrowserDebug": "以调试模式启动 Chrome",
+		"launchingBrowser": "正在启动浏览器...",
+		"leaveBlankAutoDetect": "留空可自动检测 Chrome 路径。",
+		"notConnected": "未连接",
+		"notDetectedOnMachine": "（未在您的电脑上检测到 Chrome）",
+		"remoteBrowserDebugManually": "这需要手动以调试模式启动 Chrome",
+		"remoteBrowserDescription": "允许 Cline 连接到远程 Chrome 实例。",
+		"useRemoteBrowserConnection": "使用远程浏览器连接",
+		"viewportSize": "视口大小",
+		"viewportSizeDescription": "浏览器工具使用的视口分辨率。",
+		"browser": {
+			"chromeExecutablePath": "Chrome 可执行文件路径",
+			"customBrowserArgs": "自定义浏览器参数"
 		}
 	}
 }

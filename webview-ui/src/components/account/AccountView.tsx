@@ -360,7 +360,7 @@ export const ClineAccountView = ({ clineUser, userOrganizations, activeOrganizat
 											disabled={isLoading || isLockedByRemoteConfig}
 											onChange={handleOrganizationChange}>
 											<VSCodeOption key="personal" value={uid}>
-												Personal
+												个人
 											</VSCodeOption>
 											{userOrganizations?.map((org: UserOrganization) => (
 												<VSCodeOption key={org.organizationId} value={org.organizationId}>
