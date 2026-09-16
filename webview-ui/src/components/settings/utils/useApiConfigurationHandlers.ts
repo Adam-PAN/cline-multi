@@ -5,31 +5,48 @@ import { Mode } from "@shared/storage/types"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { ModelsServiceClient } from "@/services/grpc-client"
 
+/**
+ * Serializes configuration saves so rapid successive updates can't race each other.
+ * Without this, an older save can resolve after a newer one and overwrite the newer
+ * value on the backend, which then echoes the stale value back into the webview
+ * (visible as scrambled/garbled text in input fields).
+ */
+let configSaveQueue: Promise<unknown> = Promise.resolve()
+
+function enqueueConfigSave(save: () => Promise<unknown>): Promise<unknown> {
+	const next = configSaveQueue.then(save, save)
+	// Keep the chain alive even if a save rejects
+	configSaveQueue = next.catch(() => {})
+	return next
+}
+
 export const useApiConfigurationHandlers = () => {
 	const { apiConfiguration, planActSeparateModelsSetting } = useExtensionState()
 
 	/**
 	 * Updates a single field in the API configuration.
 	 *
-	 * **Warning**: If this function is called multiple times in rapid succession,
-	 * it can lead to race conditions where later calls may overwrite changes from
-	 * earlier calls. For updating multiple fields, use `handleFieldsChange` instead.
+	 * Calls are serialized through a queue so rapid successive updates are applied
+	 * to the backend in the order they were made. Each save always builds on the
+	 * latest config state available at call time.
 	 *
 	 * @param field - The field key to update
 	 * @param value - The new value for the field
 	 */
 	const handleFieldChange = async <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => {
-		const updatedConfig = {
-			...apiConfiguration,
-			[field]: value,
-		}
+		await enqueueConfigSave(async () => {
+			const updatedConfig = {
+				...apiConfiguration,
+				[field]: value,
+			}
 
-		const protoConfig = convertApiConfigurationToProto(updatedConfig)
-		await ModelsServiceClient.updateApiConfigurationProto(
-			UpdateApiConfigurationRequest.create({
-				apiConfiguration: protoConfig,
-			}),
-		)
+			const protoConfig = convertApiConfigurationToProto(updatedConfig)
+			await ModelsServiceClient.updateApiConfigurationProto(
+				UpdateApiConfigurationRequest.create({
+					apiConfiguration: protoConfig,
+				}),
+			)
+		})
 	}
 
 	/**
@@ -42,17 +59,19 @@ export const useApiConfigurationHandlers = () => {
 	 * @param updates - An object containing the fields to update and their new values
 	 */
 	const handleFieldsChange = async (updates: Partial<ApiConfiguration>) => {
-		const updatedConfig = {
-			...apiConfiguration,
-			...updates,
-		}
+		await enqueueConfigSave(async () => {
+			const updatedConfig = {
+				...apiConfiguration,
+				...updates,
+			}
 
-		const protoConfig = convertApiConfigurationToProto(updatedConfig)
-		await ModelsServiceClient.updateApiConfigurationProto(
-			UpdateApiConfigurationRequest.create({
-				apiConfiguration: protoConfig,
-			}),
-		)
+			const protoConfig = convertApiConfigurationToProto(updatedConfig)
+			await ModelsServiceClient.updateApiConfigurationProto(
+				UpdateApiConfigurationRequest.create({
+					apiConfiguration: protoConfig,
+				}),
+			)
+		})
 	}
 
 	const handleModeFieldChange = async <PlanK extends keyof ApiConfiguration, ActK extends keyof ApiConfiguration>(

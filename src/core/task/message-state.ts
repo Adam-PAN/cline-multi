@@ -10,6 +10,7 @@ import { getApiMetrics } from "@/shared/getApiMetrics"
 import { HistoryItem } from "@/shared/HistoryItem"
 import { ClineStorageMessage } from "@/shared/messages/content"
 import { Logger } from "@/shared/services/Logger"
+import { extractUsageEntries } from "@/shared/usage-stats"
 import { getCwd, getDesktopDir } from "@/utils/path"
 import { ensureTaskDirectoryExists, saveApiConversationHistory, saveClineMessages } from "../storage/disk"
 import { TaskState } from "./TaskState"
@@ -90,6 +91,10 @@ export class MessageStateHandler extends EventEmitter<MessageStateHandlerEvents>
 		return await this.stateMutex.withLock(fn)
 	}
 
+	getTaskId(): string {
+		return this.taskId
+	}
+
 	getApiConversationHistory(): ClineStorageMessage[] {
 		return this.apiConversationHistory
 	}
@@ -142,6 +147,10 @@ export class MessageStateHandler extends EventEmitter<MessageStateHandlerEvents>
 				Logger.error("Failed to get task directory size:", taskDir, error)
 			}
 			const cwd = await getCwd(getDesktopDir())
+			const { usageEntries, apiRequestCount } = extractUsageEntries(
+				combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))),
+			)
+
 			await this.updateTaskHistory({
 				id: this.taskId,
 				ulid: this.ulid,
@@ -152,6 +161,8 @@ export class MessageStateHandler extends EventEmitter<MessageStateHandlerEvents>
 				cacheWrites: apiMetrics.totalCacheWrites,
 				cacheReads: apiMetrics.totalCacheReads,
 				totalCost: apiMetrics.totalCost,
+				apiRequests: apiRequestCount,
+				usageEntries,
 				size: taskDirSize,
 				shadowGitConfigWorkTree: await this.checkpointTracker?.getShadowGitConfigWorkTree(),
 				cwdOnTaskInitialization: cwd,

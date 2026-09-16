@@ -1,6 +1,14 @@
 import { ModelInfo } from "@shared/api"
 
-function calculateApiCostInternal(
+export interface ApiCostBreakdown {
+	inputCost: number
+	outputCost: number
+	cacheWritesCost: number
+	cacheReadsCost: number
+	totalCost: number
+}
+
+function calculateApiCostInternalWithBreakdown(
 	modelInfo: ModelInfo,
 	inputTokens: number, // Note: For OpenAI-style, this is non-cached tokens. For Anthropic-style, this is total input tokens.
 	outputTokens: number,
@@ -8,7 +16,7 @@ function calculateApiCostInternal(
 	cacheReadInputTokens: number,
 	totalInputTokensForPricing?: number, // The *total* input tokens, used for tiered pricing lookup
 	thinkingBudgetTokens?: number, // Add thinking budget info
-): number {
+): ApiCostBreakdown {
 	const usedThinkingBudget = thinkingBudgetTokens && thinkingBudgetTokens > 0
 
 	// Default prices
@@ -59,7 +67,33 @@ function calculateApiCostInternal(
 	const outputCost = (effectiveOutputPrice / 1_000_000) * outputTokens
 
 	const totalCost = cacheWritesCost + cacheReadsCost + baseInputCost + outputCost
-	return totalCost
+	return {
+		inputCost: baseInputCost,
+		outputCost,
+		cacheWritesCost,
+		cacheReadsCost,
+		totalCost,
+	}
+}
+
+function calculateApiCostInternal(
+	modelInfo: ModelInfo,
+	inputTokens: number, // Note: For OpenAI-style, this is non-cached tokens. For Anthropic-style, this is total input tokens.
+	outputTokens: number,
+	cacheCreationInputTokens: number,
+	cacheReadInputTokens: number,
+	totalInputTokensForPricing?: number, // The *total* input tokens, used for tiered pricing lookup
+	thinkingBudgetTokens?: number, // Add thinking budget info
+): number {
+	return calculateApiCostInternalWithBreakdown(
+		modelInfo,
+		inputTokens,
+		outputTokens,
+		cacheCreationInputTokens,
+		cacheReadInputTokens,
+		totalInputTokensForPricing,
+		thinkingBudgetTokens,
+	).totalCost
 }
 // For Anthropic compliant usage, the input tokens count does NOT include the cached tokens
 export function calculateApiCostAnthropic(
@@ -70,12 +104,34 @@ export function calculateApiCostAnthropic(
 	cacheReadInputTokens?: number,
 	thinkingBudgetTokens?: number,
 ): number {
+	return calculateApiCostBreakdownAnthropic(
+		modelInfo,
+		inputTokens,
+		outputTokens,
+		cacheCreationInputTokens,
+		cacheReadInputTokens,
+		thinkingBudgetTokens,
+	).totalCost
+}
+
+/**
+ * Same pricing rules as calculateApiCostAnthropic, but returns the per-component
+ * cost breakdown (input / output / cache writes / cache reads) in addition to the total.
+ */
+export function calculateApiCostBreakdownAnthropic(
+	modelInfo: ModelInfo,
+	inputTokens: number,
+	outputTokens: number,
+	cacheCreationInputTokens?: number,
+	cacheReadInputTokens?: number,
+	thinkingBudgetTokens?: number,
+): ApiCostBreakdown {
 	const cacheCreationInputTokensNum = cacheCreationInputTokens || 0
 	const cacheReadInputTokensNum = cacheReadInputTokens || 0
 	// Anthropic style: inputTokens already represents the total, so pass it directly for tiered pricing lookup if needed
 	// (though Anthropic models currently don't use tiered pricing based on input size)
 	// Anthropic style doesn't need totalInputTokensForPricing as its inputTokens already represents the total
-	return calculateApiCostInternal(
+	return calculateApiCostInternalWithBreakdown(
 		modelInfo,
 		inputTokens,
 		outputTokens,

@@ -6,7 +6,11 @@ export function RemotelyConfiguredInputWrapper({ hidden, children }: React.Props
 	return (
 		<Tooltip>
 			<TooltipContent hidden={hidden}>{t("settings.remotelyConfiguredMessage")}</TooltipContent>
-			<TooltipTrigger>{children}</TooltipTrigger>
+			{/* asChild + block wrapper: without asChild, Radix renders a <button> which
+			    shrinks to fit its content and collapses full-width inputs inside it. */}
+			<TooltipTrigger asChild>
+				<div style={{ display: "block", width: "100%" }}>{children}</div>
+			</TooltipTrigger>
 		</Tooltip>
 	)
 }

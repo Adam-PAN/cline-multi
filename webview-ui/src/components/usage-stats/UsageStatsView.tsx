@@ -1,7 +1,9 @@
-import { HistoryItem } from "@shared/HistoryItem"
-import { useCallback, useMemo, useState } from "react"
+import { StringRequest } from "@shared/proto/cline/common"
+import type { UsageTimeRange } from "@shared/usage-stats"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useExtensionState } from "@/context/ExtensionStateContext"
+import { StateServiceClient } from "@/services/grpc-client"
 import ViewHeader from "../common/ViewHeader"
 import { ModelStatsTable } from "./ModelStatsTable"
 import { UsageSummaryCard } from "./UsageSummaryCard"
@@ -11,181 +13,125 @@ type UsageStatsViewProps = {
 	onDone: () => void
 }
 
+export type CostBreakdown = {
+	inputCost: number
+	outputCost: number
+	cacheWritesCost: number
+	cacheReadsCost: number
+}
+
 export type UsageStatsData = {
 	totalTokensIn: number
 	totalTokensOut: number
 	totalCacheWrites: number
 	totalCacheReads: number
 	totalCost: number
+	costBreakdown: CostBreakdown
 	totalRequests: number
+	totalTasks: number
 	modelStats: Map<
 		string,
 		{
 			requests: number
 			tokensIn: number
 			tokensOut: number
-			cost: number
-		}
-	>
-	dailyStats: Map<
-		string,
-		{
-			tokensIn: number
-			tokensOut: number
 			cacheWrites: number
 			cacheReads: number
 			cost: number
+			inputCost: number
+			outputCost: number
+			cacheWritesCost: number
+			cacheReadsCost: number
 		}
 	>
+	trend: Array<{
+		key: string
+		label: string
+		tokensIn: number
+		tokensOut: number
+		cacheWrites: number
+		cacheReads: number
+		cost: number
+		inputCost: number
+		outputCost: number
+		cacheWritesCost: number
+		cacheReadsCost: number
+	}>
 }
 
-function parseUsageFromHistoryItem(item: HistoryItem): {
-	tokensIn: number
-	tokensOut: number
-	cacheWrites: number
-	cacheReads: number
-	cost: number
-	modelId: string
-	timestamp: number
-} {
-	return {
-		tokensIn: item.tokensIn || 0,
-		tokensOut: item.tokensOut || 0,
-		cacheWrites: item.cacheWrites || 0,
-		cacheReads: item.cacheReads || 0,
-		cost: item.totalCost || 0,
-		modelId: item.modelId || "unknown",
-		timestamp: item.ts,
-	}
+const EMPTY_STATS: UsageStatsData = {
+	totalTokensIn: 0,
+	totalTokensOut: 0,
+	totalCacheWrites: 0,
+	totalCacheReads: 0,
+	totalCost: 0,
+	costBreakdown: { inputCost: 0, outputCost: 0, cacheWritesCost: 0, cacheReadsCost: 0 },
+	totalRequests: 0,
+	totalTasks: 0,
+	modelStats: new Map(),
+	trend: [],
 }
 
-function getDateKey(timestamp: number): string {
-	const date = new Date(timestamp)
-	return `${date.getMonth() + 1}/${date.getDate()}`
-}
-
-function getHourKey(timestamp: number): string {
-	const date = new Date(timestamp)
-	return `${date.getHours().toString().padStart(2, "0")}:00`
-}
+const TIME_RANGES: UsageTimeRange[] = ["today", "week", "month", "all"]
 
 export const UsageStatsView = ({ onDone }: UsageStatsViewProps) => {
 	const { t } = useTranslation("settings")
+	// taskHistory updates (e.g. after every API request finishes) trigger a refresh,
+	// so stats stay up to date while the view is open.
 	const { environment, taskHistory = [] } = useExtensionState()
 
-	const [timeRange, setTimeRange] = useState<"today" | "week" | "month" | "all">("all")
+	const [timeRange, setTimeRange] = useState<UsageTimeRange>("all")
+	const [statsData, setStatsData] = useState<UsageStatsData>(EMPTY_STATS)
+	const [isLoading, setIsLoading] = useState(true)
 
-	const statsData = useMemo((): UsageStatsData => {
-		const now = Date.now()
-		let cutoffTime = 0
+	const statsVersion = useMemo(() => {
+		// Bump whenever the underlying history changes so effects can re-run
+		const last = taskHistory[0]
+		return `${taskHistory.length}:${last?.ts ?? 0}:${last?.totalCost ?? 0}:${last?.tokensIn ?? 0}:${last?.tokensOut ?? 0}`
+	}, [taskHistory])
 
-		switch (timeRange) {
-			case "today":
-				cutoffTime = new Date().setHours(0, 0, 0, 0)
-				break
-			case "week":
-				cutoffTime = now - 7 * 24 * 60 * 60 * 1000
-				break
-			case "month":
-				cutoffTime = now - 30 * 24 * 60 * 60 * 1000
-				break
-			default:
-				cutoffTime = 0
+	const fetchStats = useCallback(async (range: UsageTimeRange) => {
+		setIsLoading(true)
+		try {
+			const response = await StateServiceClient.getUsageStats(StringRequest.create({ value: range }))
+			if (!response.usageJson) {
+				setStatsData(EMPTY_STATS)
+				return
+			}
+			const parsed = JSON.parse(response.usageJson)
+			setStatsData({
+				totalTokensIn: parsed.totals?.tokensIn ?? 0,
+				totalTokensOut: parsed.totals?.tokensOut ?? 0,
+				totalCacheWrites: parsed.totals?.cacheWrites ?? 0,
+				totalCacheReads: parsed.totals?.cacheReads ?? 0,
+				totalCost: parsed.totals?.cost ?? 0,
+				costBreakdown: {
+					inputCost: parsed.totals?.inputCost ?? 0,
+					outputCost: parsed.totals?.outputCost ?? 0,
+					cacheWritesCost: parsed.totals?.cacheWritesCost ?? 0,
+					cacheReadsCost: parsed.totals?.cacheReadsCost ?? 0,
+				},
+				totalRequests: parsed.totals?.requests ?? 0,
+				totalTasks: parsed.totals?.tasks ?? 0,
+				modelStats: new Map(parsed.modelStats ?? []),
+				trend: parsed.trend ?? [],
+			})
+		} catch (error) {
+			console.error("Failed to load usage stats:", error)
+		} finally {
+			setIsLoading(false)
 		}
+	}, [])
 
-		const filteredItems = taskHistory.filter((item: HistoryItem) => item.ts >= cutoffTime)
+	// Use a ref so refreshes caused by state pushes don't re-create the fetch callback
+	const fetchStatsRef = useRef(fetchStats)
+	fetchStatsRef.current = fetchStats
 
-		let totalTokensIn = 0
-		let totalTokensOut = 0
-		let totalCacheWrites = 0
-		let totalCacheReads = 0
-		let totalCost = 0
-		const totalRequests = filteredItems.length
+	useEffect(() => {
+		fetchStatsRef.current(timeRange)
+	}, [timeRange, statsVersion])
 
-		const modelStats = new Map<
-			string,
-			{
-				requests: number
-				tokensIn: number
-				tokensOut: number
-				cost: number
-			}
-		>()
-
-		const dailyStats = new Map<
-			string,
-			{
-				tokensIn: number
-				tokensOut: number
-				cacheWrites: number
-				cacheReads: number
-				cost: number
-			}
-		>()
-
-		filteredItems.forEach((item: HistoryItem) => {
-			const usage = parseUsageFromHistoryItem(item)
-
-			totalTokensIn += usage.tokensIn
-			totalTokensOut += usage.tokensOut
-			totalCacheWrites += usage.cacheWrites
-			totalCacheReads += usage.cacheReads
-			totalCost += usage.cost
-
-			// Model stats
-			const modelKey = usage.modelId
-			if (!modelStats.has(modelKey)) {
-				modelStats.set(modelKey, {
-					requests: 0,
-					tokensIn: 0,
-					tokensOut: 0,
-					cost: 0,
-				})
-			}
-			const modelData = modelStats.get(modelKey)!
-			modelData.requests++
-			modelData.tokensIn += usage.tokensIn
-			modelData.tokensOut += usage.tokensOut
-			modelData.cost += usage.cost
-
-			// Daily stats - use different keys based on time range
-			let statKey: string
-			if (timeRange === "today") {
-				statKey = getHourKey(usage.timestamp)
-			} else {
-				statKey = getDateKey(usage.timestamp)
-			}
-
-			if (!dailyStats.has(statKey)) {
-				dailyStats.set(statKey, {
-					tokensIn: 0,
-					tokensOut: 0,
-					cacheWrites: 0,
-					cacheReads: 0,
-					cost: 0,
-				})
-			}
-			const dayData = dailyStats.get(statKey)!
-			dayData.tokensIn += usage.tokensIn
-			dayData.tokensOut += usage.tokensOut
-			dayData.cacheWrites += usage.cacheWrites
-			dayData.cacheReads += usage.cacheReads
-			dayData.cost += usage.cost
-		})
-
-		return {
-			totalTokensIn,
-			totalTokensOut,
-			totalCacheWrites,
-			totalCacheReads,
-			totalCost,
-			totalRequests,
-			modelStats,
-			dailyStats,
-		}
-	}, [taskHistory, timeRange])
-
-	const handleTimeRangeChange = useCallback((range: "today" | "week" | "month" | "all") => {
+	const handleTimeRangeChange = useCallback((range: UsageTimeRange) => {
 		setTimeRange(range)
 	}, [])
 
@@ -195,7 +141,7 @@ export const UsageStatsView = ({ onDone }: UsageStatsViewProps) => {
 			<div className="flex-1 overflow-y-auto px-5 pb-6">
 				{/* Time Range Selector */}
 				<div className="flex gap-2 mb-6">
-					{(["today", "week", "month", "all"] as const).map((range) => (
+					{TIME_RANGES.map((range) => (
 						<button
 							className={`px-3 py-1.5 rounded text-sm ${
 								timeRange === range
@@ -211,6 +157,8 @@ export const UsageStatsView = ({ onDone }: UsageStatsViewProps) => {
 
 				{/* Summary Cards */}
 				<UsageSummaryCard
+					costBreakdown={statsData.costBreakdown}
+					isLoading={isLoading}
 					totalCacheReads={statsData.totalCacheReads}
 					totalCost={statsData.totalCost}
 					totalRequests={statsData.totalRequests}
@@ -220,10 +168,10 @@ export const UsageStatsView = ({ onDone }: UsageStatsViewProps) => {
 				/>
 
 				{/* Usage Trend Chart */}
-				<UsageTrendChart dailyStats={statsData.dailyStats} timeRange={timeRange} />
+				<UsageTrendChart isLoading={isLoading} timeRange={timeRange} trend={statsData.trend} />
 
 				{/* Model Statistics Table */}
-				<ModelStatsTable modelStats={statsData.modelStats} />
+				<ModelStatsTable isLoading={isLoading} modelStats={statsData.modelStats} />
 			</div>
 		</div>
 	)

@@ -75,6 +75,7 @@
 		"title": "Usage Statistics",
 		"tokensConsumed": "Tokens Consumed",
 		"totalRequests": "Total Requests",
+		"totalTasks": "Tasks",
 		"totalCost": "Total Cost",
 		"input": "Input",
 		"output": "Output",
@@ -84,6 +85,14 @@
 		"usageTrend": "Usage Trend",
 		"modelStats": "Model Statistics",
 		"cost": "Cost",
+		"costBreakdown": {
+			"title": "Cost Breakdown",
+			"input": "Input",
+			"output": "Output",
+			"cacheWrites": "Cache Writes",
+			"cacheReads": "Cache Reads"
+		},
+		"loading": "Loading...",
 		"noData": "No data available",
 		"timeRange": {
 			"today": "Today",
@@ -95,6 +104,8 @@
 			"model": "Model",
 			"requests": "Requests",
 			"tokens": "Tokens",
+			"cacheWrites": "Cache Writes",
+			"cacheReads": "Cache Hits",
 			"totalCost": "Total Cost",
 			"avgCost": "Avg Cost"
 		}

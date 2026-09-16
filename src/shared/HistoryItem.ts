@@ -1,4 +1,4 @@
-import { ClineMessage } from "./ExtensionMessage"
+import type { UsageEntry } from "./usage-stats"
 
 export type HistoryItem = {
 	id: string
@@ -19,26 +19,9 @@ export type HistoryItem = {
 	checkpointManagerErrorMessage?: string
 
 	modelId?: string
-}
 
-export type UsageStatsData = {
-	totalTokensIn: number
-	totalTokensOut: number
-	totalCacheWrites: number
-	totalCacheReads: number
-	totalCost: number
-	totalRequests: number
-	modelStats: Map<string, {
-		requests: number
-		tokensIn: number
-		tokensOut: number
-		cost: number
-	}>
-	dailyStats: Map<string, {
-		tokensIn: number
-		tokensOut: number
-		cacheWrites: number
-		cacheReads: number
-		cost: number
-	}>
+	/** Number of API requests made in this task (accurate request count, not task count) */
+	apiRequests?: number
+	/** Per-request usage details captured while the task ran (tokens/cost/model per request) */
+	usageEntries?: UsageEntry[]
 }

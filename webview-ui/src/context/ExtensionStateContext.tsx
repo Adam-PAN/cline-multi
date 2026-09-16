@@ -35,6 +35,7 @@ import {
 	removeProfile,
 	reorderProfiles,
 	setActiveProfileId,
+	syncProfilesFromRemote,
 	updateProfile,
 } from "../utils/api-profiles"
 
@@ -325,6 +326,19 @@ export const ExtensionStateContextProvider: React.FC<{
 	const [hicapModels, setHicapModels] = useState<Record<string, ModelInfo>>({})
 	const [apiProfiles, setApiProfiles] = useState<ApiConfigProfile[]>(() => loadProfiles())
 	const [activeApiProfileIdState, setActiveApiProfileIdState] = useState<string | undefined>(() => getActiveProfileId())
+
+	// Hydrate profiles from the durable extension-side storage on startup.
+	// localStorage alone is wiped on extension reinstall/update, so the
+	// extension globalState copy is the source of truth (with one-time
+	// migration of legacy localStorage data into it).
+	useEffect(() => {
+		syncProfilesFromRemote().then((result) => {
+			if (result) {
+				setApiProfiles(result.profiles)
+				setActiveApiProfileIdState(result.activeId)
+			}
+		})
+	}, [])
 	const [liteLlmModels, setLiteLlmModels] = useState<Record<string, ModelInfo>>({})
 	const [totalTasksSize, setTotalTasksSize] = useState<number | null>(null)
 	const [availableTerminalProfiles, setAvailableTerminalProfiles] = useState<TerminalProfile[]>([])

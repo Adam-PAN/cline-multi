@@ -1,6 +1,6 @@
-import type { UsageTimeRange } from "@shared/usage-stats"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import type { UsageTimeRange } from "@shared/usage-stats"
 
 type TrendBucket = {
 	key: string

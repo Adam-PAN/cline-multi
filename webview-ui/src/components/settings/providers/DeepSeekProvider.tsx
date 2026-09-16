@@ -123,6 +123,38 @@ export const DeepSeekProvider = ({ showModelOptions, isPopup, currentMode }: Dee
 							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.outputPricePerMillion")}</span>
 						</DebouncedTextField>
 					</div>
+
+					<div style={{ display: "flex", gap: 10, marginTop: "5px" }}>
+						<DebouncedTextField
+							initialValue={selectedModelInfo.cacheWritesPrice?.toString() ?? ""}
+							onChange={(value) => {
+								const modelInfo = deepSeekModelInfo ? { ...deepSeekModelInfo } : { ...selectedModelInfo }
+								modelInfo.cacheWritesPrice = value ? Number(value) : undefined
+								handleModeFieldChange(
+									{ plan: "planModeDeepSeekModelInfo", act: "actModeDeepSeekModelInfo" },
+									modelInfo,
+									currentMode,
+								)
+							}}
+							style={{ flex: 1 }}>
+							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.cacheWritesPricePerMillion")}</span>
+						</DebouncedTextField>
+
+						<DebouncedTextField
+							initialValue={selectedModelInfo.cacheReadsPrice?.toString() ?? ""}
+							onChange={(value) => {
+								const modelInfo = deepSeekModelInfo ? { ...deepSeekModelInfo } : { ...selectedModelInfo }
+								modelInfo.cacheReadsPrice = value ? Number(value) : undefined
+								handleModeFieldChange(
+									{ plan: "planModeDeepSeekModelInfo", act: "actModeDeepSeekModelInfo" },
+									modelInfo,
+									currentMode,
+								)
+							}}
+							style={{ flex: 1 }}>
+							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.cacheReadsPricePerMillion")}</span>
+						</DebouncedTextField>
+					</div>
 				</>
 			)}
 		</div>

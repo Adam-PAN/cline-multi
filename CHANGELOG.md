@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.3.1]
+
+### Fixed
+
+- **Base URL input stability**: Fixed garbled/scrambled text when typing in the Base URL field of API configuration settings. Backend save round-trips (echoes) no longer overwrite in-flight keystrokes, and configuration saves are now serialized so rapid updates can't overwrite each other out-of-order
+- **Base URL input width**: Fixed the Base URL input collapsing to a tiny width in the OpenAI Compatible provider (and remotely-configured input wrappers used by LiteLLM/Vertex/Anthropic). Radix `TooltipTrigger` now renders a full-width block element instead of the default shrink-to-fit `<button>`
+- **Base URL trimming**: Trailing/leading spaces are now trimmed only on commit instead of on every keystroke, preventing cursor jumps and swallowed characters mid-typing
+
 ## [4.2.0]
 
 ### Added

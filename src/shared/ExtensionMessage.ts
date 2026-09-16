@@ -349,6 +349,13 @@ export interface ClineApiReqInfo {
 	cacheWrites?: number
 	cacheReads?: number
 	cost?: number
+	/** Cost breakdown by pricing component (input / cache writes / cache reads / output) */
+	inputCost?: number
+	outputCost?: number
+	cacheWritesCost?: number
+	cacheReadsCost?: number
+	/** Model that served this API request (used for accurate per-model usage stats) */
+	modelId?: string
 	cancelReason?: ClineApiReqCancelReason
 	streamingFailedMessage?: string
 	retryStatus?: {

@@ -30,7 +30,9 @@ export const BaseUrlField = ({
 	const { t } = useTranslation("settings")
 	const resolvedLabel = label ?? t("settings.useCustomBaseUrl")
 	const [isEnabled, setIsEnabled] = useState(!!initialValue)
-	const [localValue, setLocalValue] = useDebouncedInput(initialValue || "", onChange)
+	// Trim only on commit - trimming on every keystroke rewrites the controlled value
+	// mid-typing, which moves the cursor and swallows intentional characters.
+	const [localValue, setLocalValue] = useDebouncedInput(initialValue || "", (value) => onChange(value.trim()))
 
 	const handleToggle = (e: any) => {
 		const checked = e.target.checked === true
@@ -52,7 +54,7 @@ export const BaseUrlField = ({
 			{isEnabled && (
 				<VSCodeTextField
 					disabled={disabled}
-					onInput={(e: any) => setLocalValue(e.target.value.trim())}
+					onInput={(e: any) => setLocalValue(e.target.value)}
 					placeholder={placeholder}
 					style={{ display: "block", width: "100%", marginTop: 3 }}
 					type="text"

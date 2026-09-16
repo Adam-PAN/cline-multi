@@ -76,32 +76,32 @@ export const OpenAICompatibleProvider = ({ showModelOptions, isPopup, currentMod
 
 	return (
 		<div>
-			<Tooltip>
-				<TooltipTrigger>
-					<div className="mb-2.5">
+			<div className="mb-2.5">
+				<Tooltip>
+					<TooltipTrigger>
 						<div className="flex items-center gap-2 mb-1">
 							<span style={{ fontWeight: 500 }}>{t("commonFields.baseUrl")}</span>
 							{remoteConfigSettings?.openAiBaseUrl !== undefined && (
 								<i className="codicon codicon-lock text-description text-sm" />
 							)}
 						</div>
-						<DebouncedTextField
-							disabled={remoteConfigSettings?.openAiBaseUrl !== undefined}
-							initialValue={apiConfiguration?.openAiBaseUrl || ""}
-							onChange={(value) => {
-								handleFieldChange("openAiBaseUrl", value)
-								debouncedRefreshOpenAiModels(value, apiConfiguration?.openAiApiKey)
-							}}
-							placeholder={t("commonFields.enterBaseUrl")}
-							style={{ width: "100%", marginBottom: 10 }}
-							type="text"
-						/>
-					</div>
-				</TooltipTrigger>
-				<TooltipContent hidden={remoteConfigSettings?.openAiBaseUrl === undefined}>
-					{t("settings.remotelyConfiguredMessage")}
-				</TooltipContent>
-			</Tooltip>
+					</TooltipTrigger>
+					<TooltipContent hidden={remoteConfigSettings?.openAiBaseUrl === undefined}>
+						{t("settings.remotelyConfiguredMessage")}
+					</TooltipContent>
+				</Tooltip>
+				<DebouncedTextField
+					disabled={remoteConfigSettings?.openAiBaseUrl !== undefined}
+					initialValue={apiConfiguration?.openAiBaseUrl || ""}
+					onChange={(value) => {
+						handleFieldChange("openAiBaseUrl", value)
+						debouncedRefreshOpenAiModels(value, apiConfiguration?.openAiApiKey)
+					}}
+					placeholder={t("commonFields.enterBaseUrl")}
+					style={{ width: "100%", marginBottom: 10 }}
+					type="text"
+				/>
+			</div>
 
 			<ApiKeyField
 				initialValue={apiConfiguration?.openAiApiKey || ""}
@@ -156,8 +156,8 @@ export const OpenAICompatibleProvider = ({ showModelOptions, isPopup, currentMod
 						</div>
 
 						<div>
-							{headerEntries.map(([key, value], index) => (
-								<div key={index} style={{ display: "flex", gap: 5, marginTop: 5 }}>
+							{headerEntries.map(([key, value]) => (
+								<div key={key} style={{ display: "flex", gap: 5, marginTop: 5 }}>
 									<DebouncedTextField
 										disabled={remoteConfigSettings?.openAiHeaders !== undefined}
 										initialValue={key}
@@ -204,15 +204,17 @@ export const OpenAICompatibleProvider = ({ showModelOptions, isPopup, currentMod
 
 			{remoteConfigSettings?.azureApiVersion !== undefined ? (
 				<Tooltip>
-					<TooltipTrigger>
-						<BaseUrlField
-							disabled={true}
-							initialValue={apiConfiguration?.azureApiVersion}
-							label={t("providers.openaiCompatible.setAzureApiVersion")}
-							onChange={(value) => handleFieldChange("azureApiVersion", value)}
-							placeholder={`Default: ${azureOpenAiDefaultApiVersion}`}
-							showLockIcon={true}
-						/>
+					<TooltipTrigger asChild>
+						<div style={{ display: "block", width: "100%" }}>
+							<BaseUrlField
+								disabled={true}
+								initialValue={apiConfiguration?.azureApiVersion}
+								label={t("providers.openaiCompatible.setAzureApiVersion")}
+								onChange={(value) => handleFieldChange("azureApiVersion", value)}
+								placeholder={`Default: ${azureOpenAiDefaultApiVersion}`}
+								showLockIcon={true}
+							/>
+						</div>
 					</TooltipTrigger>
 					<TooltipContent>This setting is managed by your organization's remote configuration</TooltipContent>
 				</Tooltip>
@@ -368,6 +370,42 @@ export const OpenAICompatibleProvider = ({ showModelOptions, isPopup, currentMod
 							}}
 							style={{ flex: 1 }}>
 							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.outputPricePerMillion")}</span>
+						</DebouncedTextField>
+					</div>
+
+					<div style={{ display: "flex", gap: 10, marginTop: "5px" }}>
+						<DebouncedTextField
+							initialValue={
+								openAiModelInfo?.cacheWritesPrice !== undefined ? openAiModelInfo.cacheWritesPrice.toString() : ""
+							}
+							onChange={(value) => {
+								const modelInfo = openAiModelInfo ? openAiModelInfo : { ...openAiModelInfoSaneDefaults }
+								modelInfo.cacheWritesPrice = value ? parsePrice(value, 0) : undefined
+								handleModeFieldChange(
+									{ plan: "planModeOpenAiModelInfo", act: "actModeOpenAiModelInfo" },
+									modelInfo,
+									currentMode,
+								)
+							}}
+							style={{ flex: 1 }}>
+							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.cacheWritesPricePerMillion")}</span>
+						</DebouncedTextField>
+
+						<DebouncedTextField
+							initialValue={
+								openAiModelInfo?.cacheReadsPrice !== undefined ? openAiModelInfo.cacheReadsPrice.toString() : ""
+							}
+							onChange={(value) => {
+								const modelInfo = openAiModelInfo ? openAiModelInfo : { ...openAiModelInfoSaneDefaults }
+								modelInfo.cacheReadsPrice = value ? parsePrice(value, 0) : undefined
+								handleModeFieldChange(
+									{ plan: "planModeOpenAiModelInfo", act: "actModeOpenAiModelInfo" },
+									modelInfo,
+									currentMode,
+								)
+							}}
+							style={{ flex: 1 }}>
+							<span style={{ fontWeight: 500 }}>{t("providers.openaiCompatible.cacheReadsPricePerMillion")}</span>
 						</DebouncedTextField>
 					</div>
 

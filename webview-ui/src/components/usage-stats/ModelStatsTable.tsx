@@ -5,11 +5,18 @@ type ModelStats = {
 	requests: number
 	tokensIn: number
 	tokensOut: number
+	cacheWrites: number
+	cacheReads: number
 	cost: number
+	inputCost: number
+	outputCost: number
+	cacheWritesCost: number
+	cacheReadsCost: number
 }
 
 type ModelStatsTableProps = {
 	modelStats: Map<string, ModelStats>
+	isLoading?: boolean
 }
 
 function formatNumber(num: number): string {
@@ -26,7 +33,7 @@ function formatCost(cost: number): string {
 	return "$" + cost.toFixed(4)
 }
 
-export const ModelStatsTable = ({ modelStats }: ModelStatsTableProps) => {
+export const ModelStatsTable = ({ modelStats, isLoading }: ModelStatsTableProps) => {
 	const { t } = useTranslation("settings")
 	const [sortField, setSortField] = useState<"requests" | "tokens" | "cost">("tokens")
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
@@ -82,7 +89,9 @@ export const ModelStatsTable = ({ modelStats }: ModelStatsTableProps) => {
 			<h3 className="text-lg font-semibold text-[var(--vscode-foreground)] p-6 pb-4">{t("usageStats.modelStats")}</h3>
 
 			{sortedModels.length === 0 ? (
-				<div className="text-center text-[var(--vscode-descriptionForeground)] py-8">{t("usageStats.noData")}</div>
+				<div className="text-center text-[var(--vscode-descriptionForeground)] py-8">
+					{isLoading ? t("usageStats.loading") : t("usageStats.noData")}
+				</div>
 			) : (
 				<div className="overflow-x-auto">
 					<table className="w-full text-sm">
@@ -96,6 +105,12 @@ export const ModelStatsTable = ({ modelStats }: ModelStatsTableProps) => {
 									onClick={() => handleSort("requests")}>
 									{t("usageStats.tableHeaders.requests")}
 									<SortIcon field="requests" />
+								</th>
+								<th className="text-right p-4 text-[var(--vscode-descriptionForeground)] font-medium">
+									{t("usageStats.tableHeaders.cacheWrites")}
+								</th>
+								<th className="text-right p-4 text-[var(--vscode-descriptionForeground)] font-medium">
+									{t("usageStats.tableHeaders.cacheReads")}
 								</th>
 								<th
 									className="text-right p-4 text-[var(--vscode-descriptionForeground)] font-medium cursor-pointer hover:text-[var(--vscode-foreground)]"
@@ -122,9 +137,24 @@ export const ModelStatsTable = ({ modelStats }: ModelStatsTableProps) => {
 									<td className="p-4 text-[var(--vscode-foreground)] font-medium">{model.name}</td>
 									<td className="p-4 text-right text-[var(--vscode-foreground)]">{model.requests}</td>
 									<td className="p-4 text-right text-[var(--vscode-foreground)]">
+										{formatNumber(model.cacheWrites)}
+									</td>
+									<td className="p-4 text-right text-[var(--vscode-foreground)]">
+										{formatNumber(model.cacheReads)}
+									</td>
+									<td className="p-4 text-right text-[var(--vscode-foreground)]">
 										{formatNumber(model.totalTokens)}
 									</td>
-									<td className="p-4 text-right text-[var(--vscode-foreground)]">{formatCost(model.cost)}</td>
+									<td
+										className="p-4 text-right text-[var(--vscode-foreground)]"
+										title={[
+											`${t("usageStats.costBreakdown.input")}: ${formatCost(model.inputCost)}`,
+											`${t("usageStats.costBreakdown.cacheWrites")}: ${formatCost(model.cacheWritesCost)}`,
+											`${t("usageStats.costBreakdown.cacheReads")}: ${formatCost(model.cacheReadsCost)}`,
+											`${t("usageStats.costBreakdown.output")}: ${formatCost(model.outputCost)}`,
+										].join("\n")}>
+										{formatCost(model.cost)}
+									</td>
 									<td className="p-4 text-right text-[var(--vscode-foreground)]">
 										{model.requests > 0 ? formatCost(model.cost / model.requests) : "$0.0000"}
 									</td>

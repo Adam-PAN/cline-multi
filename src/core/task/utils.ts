@@ -1,8 +1,9 @@
 import { ApiHandler } from "@core/api"
+import { usageLog } from "@core/storage/usage-log"
 import { execSync } from "child_process"
 import { showApprovalNotification } from "@/integrations/notifications"
-import { ClineApiReqCancelReason, ClineApiReqInfo } from "@/shared/ExtensionMessage"
-import { calculateApiCostAnthropic } from "@/utils/cost"
+import type { ClineApiReqCancelReason, ClineApiReqInfo } from "@/shared/ExtensionMessage"
+import { calculateApiCostBreakdownAnthropic } from "@/utils/cost"
 import { MessageStateHandler } from "./message-state"
 
 export const showNotificationForApproval = (message: string, notificationsEnabled: boolean) => {
@@ -20,6 +21,12 @@ type UpdateApiReqMsgParams = {
 	api: ApiHandler
 	cancelReason?: ClineApiReqCancelReason
 	streamingFailedMessage?: string
+	/** API provider id of the request (e.g. "openai", "openrouter") */
+	provider?: string
+	/** "plan" | "act" — the mode the request was made in */
+	mode?: string
+	/** Human readable task snippet to attach to the durable usage log */
+	taskSnippet?: string
 }
 
 // update api_req_started. we can't use api_req_finished anymore since it's a unique case where it could come after a streaming message (ie in the middle of being updated or executed)
@@ -30,6 +37,23 @@ export const updateApiReqMsg = async (params: UpdateApiReqMsgParams) => {
 	const currentApiReqInfo: ClineApiReqInfo = JSON.parse(clineMessages[params.lastApiReqIndex].text || "{}")
 	delete currentApiReqInfo.retryStatus // Clear retry status when request is finalized
 
+	// Compute the per-component cost breakdown (input / cache writes / cache reads / output)
+	// using the model's four pricing components. When an external totalCost is provided,
+	// scale the components so they still sum exactly to the recorded total.
+	const model = params.api.getModel()
+	const breakdown = calculateApiCostBreakdownAnthropic(
+		model.info,
+		params.inputTokens,
+		params.outputTokens,
+		params.cacheWriteTokens,
+		params.cacheReadTokens,
+	)
+	const totalCost = params.totalCost ?? breakdown.totalCost
+	const scale =
+		breakdown.totalCost > 0 && params.totalCost !== undefined && params.totalCost !== breakdown.totalCost
+			? params.totalCost / breakdown.totalCost
+			: 1
+
 	await params.messageStateHandler.updateClineMessage(params.lastApiReqIndex, {
 		text: JSON.stringify({
 			...currentApiReqInfo, // Spread the modified info (with retryStatus removed)
@@ -37,18 +61,36 @@ export const updateApiReqMsg = async (params: UpdateApiReqMsgParams) => {
 			tokensOut: params.outputTokens,
 			cacheWrites: params.cacheWriteTokens,
 			cacheReads: params.cacheReadTokens,
-			cost:
-				params.totalCost ??
-				calculateApiCostAnthropic(
-					params.api.getModel().info,
-					params.inputTokens,
-					params.outputTokens,
-					params.cacheWriteTokens,
-					params.cacheReadTokens,
-				),
+			// Record which model served this request so usage stats can attribute tokens/cost per model
+			modelId: model.id,
+			cost: totalCost,
+			inputCost: breakdown.inputCost * scale,
+			outputCost: breakdown.outputCost * scale,
+			cacheWritesCost: breakdown.cacheWritesCost * scale,
+			cacheReadsCost: breakdown.cacheReadsCost * scale,
 			cancelReason: params.cancelReason,
 			streamingFailedMessage: params.streamingFailedMessage,
 		} satisfies ClineApiReqInfo),
+	})
+
+	// Durable per-request usage record — survives task deletion and extension
+	// reinstalls so usage statistics stay complete and stable over time.
+	usageLog.append({
+		ts: Date.now(),
+		tokensIn: params.inputTokens,
+		tokensOut: params.outputTokens,
+		cacheWrites: params.cacheWriteTokens,
+		cacheReads: params.cacheReadTokens,
+		cost: totalCost,
+		inputCost: breakdown.inputCost * scale,
+		outputCost: breakdown.outputCost * scale,
+		cacheWritesCost: breakdown.cacheWritesCost * scale,
+		cacheReadsCost: breakdown.cacheReadsCost * scale,
+		modelId: model.id,
+		taskId: params.messageStateHandler.getTaskId(),
+		provider: params.provider,
+		mode: params.mode,
+		taskSnippet: params.taskSnippet,
 	})
 }
 

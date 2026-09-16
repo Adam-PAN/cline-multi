@@ -79,12 +79,11 @@ https://github.com/Adam-PAN/cline-multi
 
 详见 [CHANGELOG.md](CHANGELOG.md)
 
-最近更新 (v4.1.0)：
-- **全厂商模型下拉框支持自由输入** — 可输入任意自定义模型 ID
-- **新增 Claude 5 全系列** — Opus 5, Sonnet 5, Fable 5, Mythos 5
-- **国产模型大规模更新** — Kimi K3 (1M), GLM-5.3 Flash (1.3M), Qwen3.8, Seed 2.1 等
-- **XAI/Grok 新模型** — Grok 4.20 (2M ctx), Grok 4.6/4.5/4.3
-- **OpenAI 新模型** — GPT-5.6 Sol/Terra/Luna 及 Pro 变体
+最近更新 (v4.3.1)：
+- **修复基础 URL 输入框文字错乱** — 输入不再被慢速状态回流覆盖，配置保存改为串行化防止乱序互相覆盖
+- **修复基础 URL 输入框宽度过短** — OpenAI Compatible 等提供商的 Base URL 输入框现在与其他输入框宽度一致
+- **上下文压缩增强** — 200K+ 模型自动启用 auto-condense，500K+ 模型使用 92% 高效缓冲
+- **多模态智能切换** — 从图片模型切回纯文本模型时自动剥离历史图片防止 API 报错
 - 详见 [CHANGELOG.md](CHANGELOG.md)
 
 ## 许可证

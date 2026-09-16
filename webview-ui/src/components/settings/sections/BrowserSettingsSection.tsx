@@ -15,6 +15,14 @@ interface BrowserSettingsSectionProps {
 	renderSectionHeader: (tabId: string) => JSX.Element | null
 }
 
+// Viewport preset display labels (Chinese), the value remains the English preset name
+const VIEWPORT_PRESET_LABELS: Record<string, string> = {
+	"Large Desktop (1280x800)": "大桌面 (1280x800)",
+	"Small Desktop (900x600)": "小桌面 (900x600)",
+	"Tablet (768x1024)": "平板 (768x1024)",
+	"Mobile (360x640)": "手机 (360x640)",
+}
+
 const ConnectionStatusIndicator = ({
 	isChecking,
 	isConnected,
@@ -149,7 +157,7 @@ export const BrowserSettingsSection: React.FC<BrowserSettingsSectionProps> = ({ 
 				console.error("Error relaunching Chrome:", error)
 				setRelaunchResult({
 					success: false,
-					message: `Error relaunching Chrome: ${error.message}`,
+					message: t("settingsSections.relaunchError", { message: error.message }),
 				})
 				setDebugMode(false)
 			})
@@ -204,7 +212,7 @@ export const BrowserSettingsSection: React.FC<BrowserSettingsSectionProps> = ({ 
 									}>
 									{Object.entries(BROWSER_VIEWPORT_PRESETS).map(([name]) => (
 										<VSCodeOption key={name} value={name}>
-											{name}
+											{VIEWPORT_PRESET_LABELS[name] ?? name}
 										</VSCodeOption>
 									))}
 								</VSCodeDropdown>
@@ -259,18 +267,16 @@ export const BrowserSettingsSection: React.FC<BrowserSettingsSectionProps> = ({ 
 									: detectedChromePath
 										? ` (${detectedChromePath})`
 										: ""}
-								. You can specify a custom path below. Using a remote browser connection requires starting Chrome
-								in debug mode
+								{t("settingsSections.remoteBrowserCustomPathHint")}
 								{browserSettings.remoteBrowserEnabled ? (
 									<>
 										{" "}
-										{t("settingsSections.remoteBrowserDebugManually")} (
-										<code>--remote-debugging-port=9222</code>) or using the button below. Enter the host
-										address or leave it blank for automatic discovery.
+										{t("settingsSections.remoteBrowserDebugHint")}
+										<code>--remote-debugging-port=9222</code>
+										{t("settingsSections.remoteBrowserDebugManually")}
+										{t("settingsSections.remoteBrowserHostHint")}
 									</>
-								) : (
-									"."
-								)}
+								) : null}
 							</p>
 							{/* Moved remote-specific settings to appear directly after enabling remote connection */}
 							{browserSettings.remoteBrowserEnabled && (
@@ -337,7 +343,7 @@ export const BrowserSettingsSection: React.FC<BrowserSettingsSectionProps> = ({ 
 									id="chrome-executable-path"
 									initialValue={browserSettings.chromeExecutablePath || ""}
 									onChange={(value) => updateSetting("browserSettings", { chromeExecutablePath: value })}
-									placeholder="e.g., /usr/bin/google-chrome or C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+									placeholder={t("settingsSections.browser.chromePathPlaceholder")}
 									style={{ width: "100%" }}
 								/>
 								<p
@@ -360,7 +366,7 @@ export const BrowserSettingsSection: React.FC<BrowserSettingsSectionProps> = ({ 
 									id="custom-browser-args"
 									initialValue={browserSettings.customArgs || ""}
 									onChange={(value) => updateSetting("browserSettings", { customArgs: value })}
-									placeholder="e.g., --no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --no-first-run --no-zygote"
+									placeholder={t("settingsSections.browser.customArgsPlaceholder")}
 									style={{ width: "100%" }}
 								/>
 								<p

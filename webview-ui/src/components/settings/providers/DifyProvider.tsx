@@ -6,7 +6,6 @@ import { DebouncedTextField } from "../common/DebouncedTextField"
 import { ModelInfoView } from "../common/ModelInfoView"
 import { normalizeApiConfiguration } from "../utils/providerUtils"
 import { useApiConfigurationHandlers } from "../utils/useApiConfigurationHandlers"
-import { useDebouncedInput } from "../utils/useDebouncedInput"
 
 interface DifyProviderProps {
 	showModelOptions: boolean
@@ -18,15 +17,6 @@ export const DifyProvider = ({ showModelOptions, isPopup, currentMode }: DifyPro
 	const { t } = useTranslation("settings")
 	const { apiConfiguration } = useExtensionState()
 	const { handleFieldChange } = useApiConfigurationHandlers()
-
-	// Use debounced input for proper state management
-	const [_baseUrlValue, _setBaseUrlValue] = useDebouncedInput(apiConfiguration?.difyBaseUrl || "", (value) =>
-		handleFieldChange("difyBaseUrl", value),
-	)
-
-	const [_apiKeyValue, _setApiKeyValue] = useDebouncedInput(apiConfiguration?.difyApiKey || "", (value) =>
-		handleFieldChange("difyApiKey", value),
-	)
 
 	// Get the normalized configuration
 	const { selectedModelId, selectedModelInfo } = normalizeApiConfiguration(apiConfiguration, currentMode)

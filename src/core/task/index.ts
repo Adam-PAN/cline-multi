@@ -158,6 +158,10 @@ export class Task {
 	private taskIsFavorited?: boolean
 	private cwd: string
 	private taskInitializationStartTime: number
+	/** Provider id the task was started with — recorded on each durable usage-log entry. */
+	private startProvider?: string
+	/** Mode ("plan" | "act") the task was started with — recorded on each durable usage-log entry. */
+	private startMode?: string
 
 	taskState: TaskState
 
@@ -483,6 +487,10 @@ export class Task {
 		}
 		const mode = this.stateManager.getGlobalSettingsKey("mode")
 		const currentProvider = mode === "plan" ? apiConfiguration.planModeApiProvider : apiConfiguration.actModeApiProvider
+		// Remember the provider/mode this task was started with so each finalized
+		// API request can be attributed in the durable usage log.
+		this.startProvider = currentProvider
+		this.startMode = mode
 
 		// Now that ulid is initialized, we can build the API handler
 		this.api = buildApiHandler(effectiveApiConfiguration, mode)
@@ -2158,6 +2166,8 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 						api: this.api,
 						cancelReason: "streaming_failed",
 						streamingFailedMessage,
+						provider: this.startProvider,
+						mode: this.startMode,
 					})
 					await this.messageStateHandler.saveClineMessagesAndUpdateHistory()
 					await this.postStateToWebview()
@@ -2723,6 +2733,8 @@ Speak in ${languageInstructionMap[preferredLanguage] || preferredLanguage}.`
 					totalCost: taskMetrics.totalCost,
 					cancelReason,
 					streamingFailedMessage,
+					provider: this.startProvider,
+					mode: this.startMode,
 				})
 			}
 
